@@ -1,0 +1,14 @@
+node_modules/
+dist/
+server/data/*.db
+server/data/*.db-journal
+server/data/*.db-wal
+server/data/*.db-shm
+.env
+.env.local
+.DS_Store
+*.log
+run.log
+server_out.log
+server_err.log
+.vite/

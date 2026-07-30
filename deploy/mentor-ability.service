@@ -1,0 +1,48 @@
+# ============================================================================
+# 导师辅导能力成熟度自评 —— systemd 服务单元
+#
+# 安装方式（在服务器 /opt/mentor-ability 部署好后执行）：
+#   sudo cp deploy/mentor-ability.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now mentor-ability
+#   sudo systemctl status mentor-ability
+#
+# 与“职场基因检测”旧站点的隔离说明：
+#   - 旧站点是 Docker 栈（docker compose 管理，PostgreSQL 在 docker 卷 pgdata）；
+#   - 本服务是【独立 systemd 进程】，不在任何 docker-compose 中，
+#     绝不调用旧站点的 deploy.sh，也绝不读写它的 PostgreSQL / nginx 配置；
+#   - 监听 3001，与旧的 8080/8081/3000 互不冲突；
+#   - 数据写在 server/data/mentor.db（独立 SQLite 文件），物理上与旧库无关。
+#   二者唯一共享的是“同一台 Linux 操作系统”，不存在数据/代码混淆的可能。
+# ============================================================================
+
+[Unit]
+Description=导师辅导能力成熟度自评 (mentor-ability)
+Documentation=file:///opt/mentor-ability/README.md
+After=network.target
+# 故意不写 Requires/After 任何 docker 服务，确保与旧站点彻底解耦
+
+[Service]
+Type=simple
+# 使用独立低权限账户运行，进一步隔离（创建：sudo useradd -r -s /usr/sbin/nologin -d /opt/mentor-ability mentor）
+User=mentor
+Group=mentor
+WorkingDirectory=/opt/mentor-ability/server
+# 通过启动脚本启动（自动处理 node:sqlite 参数 + 读取根目录 .env）
+ExecStart=/bin/bash /opt/mentor-ability/server/start.sh
+# 启动前校验根目录 .env 是否存在，避免静默用错配置
+ExecStartPre=/bin/bash -c 'test -f /opt/mentor-ability/.env || { echo "缺少 /opt/mentor-ability/.env，请复制 .env.production 并修改后重命名"; exit 1; }'
+Restart=on-failure
+RestartSec=3
+# 不继承系统环境，全部来自 .env，避免与服务器上其他应用的环境变量混淆
+Environment=NODE_ENV=production
+# 资源上限（按需取消注释，避免影响同机其他服务）
+# MemoryMax=512M
+# TasksMax=256
+# 日志统一交给 journald
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mentor-ability
+
+[Install]
+WantedBy=multi-user.target

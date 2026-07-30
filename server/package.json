@@ -1,0 +1,19 @@
+{
+  "name": "mentor-ability-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "导师辅导能力成熟度自评 - 后端服务（基于 Node 内置 node:sqlite）",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "start": "node --env-file=.env src/index.js",
+    "dev": "node --env-file=.env --watch src/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.1"
+  }
+}
