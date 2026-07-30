@@ -26,46 +26,49 @@ function pick(v) {
 
 <template>
   <div class="scale" role="radiogroup" aria-label="符合程度">
-    <button
+    <div
       v-for="o in options"
       :key="o.value"
-      class="bubble"
+      class="opt-row"
+      :class="{ on: selected === o.value }"
       role="radio"
       :aria-checked="selected === o.value"
-      :class="{ active: selected === o.value }"
-      :style="{
-        width: o.size + 'px',
-        height: o.size + 'px',
-        '--dim': dimColor
-      }"
       @click="pick(o.value)"
     >
-      <span class="num">{{ o.value }}</span>
-    </button>
-    <div class="labels">
-      <span v-for="o in options" :key="o.value" class="lab" :class="{ on: selected === o.value }">
-        {{ o.value }}.{{ o.label }}
-      </span>
+      <button
+        class="bubble"
+        :class="{ active: selected === o.value }"
+        :style="{
+          width: o.size + 'px',
+          height: o.size + 'px',
+          '--dim': dimColor
+        }"
+        @click.stop="pick(o.value)"
+      >
+        <span class="num">{{ o.value }}</span>
+      </button>
+      <span class="lab" :class="{ on: selected === o.value }">{{ o.value }}.{{ o.label }}</span>
     </div>
   </div>
 </template>
 
 <style scoped>
-.scale { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.scale .bubble {
+/* 竖向一列：从上到下 1→5，圆圈直径递增，像温度计/量尺 */
+.scale { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.opt-row { display: flex; align-items: center; gap: 14px; cursor: pointer; }
+.opt-row .bubble {
   display: flex; align-items: center; justify-content: center;
   border-radius: 50%; border: 2px solid var(--border); background: #fff;
-  cursor: pointer; transition: all .18s ease; padding: 0;
+  cursor: pointer; transition: all .18s ease; padding: 0; flex: none;
 }
-.scale .bubble .num { font-size: 13px; color: var(--text-dim); font-weight: 700; transition: color .18s; }
-.scale .bubble:hover { border-color: var(--dim); transform: translateY(-2px); }
-.scale .bubble.active {
+.opt-row .bubble .num { font-size: 13px; color: var(--text-dim); font-weight: 700; transition: color .18s; }
+.opt-row:hover .bubble { border-color: var(--dim); transform: scale(1.04); }
+.opt-row .bubble.active {
   border-color: var(--dim);
   background: linear-gradient(135deg, var(--dim), color-mix(in srgb, var(--dim) 70%, #ffffff));
   box-shadow: 0 6px 16px color-mix(in srgb, var(--dim) 35%, transparent);
 }
-.scale .bubble.active .num { color: #fff; }
-.labels { display: flex; justify-content: space-between; width: 100%; max-width: 360px; gap: 4px; }
-.labels .lab { font-size: 12px; color: var(--text-dim); flex: 1; text-align: center; }
-.labels .lab.on { color: var(--text); font-weight: 700; }
+.opt-row .bubble.active .num { color: #fff; }
+.opt-row .lab { font-size: 15px; color: var(--text-dim); transition: color .18s, font-weight .18s; }
+.opt-row .lab.on { color: var(--text); font-weight: 700; }
 </style>
