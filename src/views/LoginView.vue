@@ -4,6 +4,8 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../stores/assessment.js'
 import { api } from '../api/client.js'
 
+const props = defineProps({ hideRegister: { type: Boolean, default: false } })
+
 const user = useUserStore()
 const router = useRouter()
 const route = useRoute()
@@ -47,7 +49,7 @@ async function submit() {
         <p>用一套成熟模型，看清你的辅导能力处在哪一能级，并获得可执行的提升建议。</p>
       </div>
 
-      <div class="tabs">
+      <div class="tabs" v-if="!hideRegister">
         <div class="tab" :class="{ active: isLogin }" @click="switchMode('login')">登录</div>
         <div class="tab" :class="{ active: !isLogin }" @click="switchMode('register')">注册</div>
       </div>

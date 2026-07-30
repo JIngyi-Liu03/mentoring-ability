@@ -3,8 +3,9 @@
 # 导师辅导能力成熟度自评 —— 服务器端一键部署脚本
 #
 # 在目标 Ubuntu 服务器上以 root（或用 sudo）执行本脚本即可完成：
-#   git 拉取代码 → 装依赖 → 构建 dist → 生成生产 .env（自动随机密钥）
-#   → 建独立低权限账户 → 注册 systemd 服务 → 放行 3001 → 健康检查
+#   git 拉取代码 → 装依赖 → 构建 dist(用户端) 与 dist-admin(后台端)
+#   → 生成生产 .env（自动随机密钥）
+#   → 建独立低权限账户 → 注册 systemd 服务 → 放行 3001/3002 → 健康检查
 #
 # 与“职场基因检测”旧站点的隔离：
 #   - 旧站点是 Docker 栈，本脚本完全不碰 docker / 旧站点 compose / nginx / PostgreSQL；
@@ -59,11 +60,12 @@ else
 fi
 cd "$INSTALL_DIR"
 
-echo "==> [3/9] 安装依赖并构建前端 dist"
+echo "==> [3/9] 安装依赖并构建前端（用户端 dist + 后台端 dist-admin）"
 npm install
 npm --prefix server install
-npm run build
+npm run build:all
 echo "    dist 构建完成：$(ls dist | head)"
+echo "    dist-admin 构建完成：$(ls dist-admin | head)"
 
 echo "==> [4/9] 生成生产 .env（自动随机安全密钥）"
 cp .env.production .env
@@ -92,21 +94,24 @@ systemctl enable --now mentor-ability
 sleep 2
 systemctl is-active --quiet mentor-ability && echo "    systemd 服务状态: active (running)" || echo "    ⚠️ 服务未运行，请查看: journalctl -u mentor-ability -n 50"
 
-echo "==> [8/9] 放行防火墙端口 3001（仅新增规则，不动旧站点 8080/8081）"
+echo "==> [8/9] 放行防火墙端口 3001/3002（仅新增规则，不动旧站点 8080/8081）"
 if command -v ufw >/dev/null 2>&1 && ufw status | grep -q "Status: active"; then
   ufw allow 3001/tcp
-  echo "    ufw 已放行 3001"
+  ufw allow 3002/tcp
+  echo "    ufw 已放行 3001、3002"
 else
-  echo "    ufw 未启用或不存在，跳过（请确认腾讯云安全组已放行 3001 入站）"
+  echo "    ufw 未启用或不存在，跳过（请确认腾讯云安全组已放行 3001/3002 入站）"
 fi
-echo "    ⚠️  请到腾讯云控制台 → 防火墙/安全组 → 新增 TCP:3001 入站规则"
+echo "    ⚠️  请到腾讯云控制台 → 防火墙/安全组 → 新增 TCP:3001 与 TCP:3002 入站规则"
 
 echo "==> [9/9] 健康检查"
 HEALTH=$(curl -s http://localhost:3001/api/health || true)
 echo "    GET /api/health => $HEALTH"
 if echo "$HEALTH" | grep -q '"ok":true'; then
   echo ""
-  echo "✅ 部署完成！访问地址： http://<服务器公网IP>:3001/"
+  echo "✅ 部署完成！"
+  echo "   用户端（测评）： http://<服务器公网IP>:3001/"
+  echo "   后台端（管理）： http://<服务器公网IP>:3002/"
   echo "   管理后台登录：账号 admin / 上面生成的密码"
 else
   echo "⚠️ 健康检查未通过，请排查："
