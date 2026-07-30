@@ -33,6 +33,19 @@ async function submit() {
   await store.submit()
   router.push('/result')
 }
+
+// 选中选项后自动进入下一题（最后一题不自动提交，避免误交）
+let advanceTimer = null
+function onAnswer(v) {
+  store.setAnswer(idx.value, v)
+  if (v == null) return                       // 取消选择不前进
+  if (idx.value >= total - 1) return          // 最后一题仅记录答案
+  if (advanceTimer) clearTimeout(advanceTimer)
+  advanceTimer = setTimeout(() => {
+    advanceTimer = null
+    next()
+  }, 350)
+}
 </script>
 
 <template>
@@ -59,7 +72,7 @@ async function submit() {
       <QuestionCard
         :modelValue="store.answers[idx]?.value ?? null"
         :dimColor="dim.color"
-        @update:modelValue="v => store.setAnswer(idx, v)"
+        @update:modelValue="onAnswer"
       />
     </div>
 
