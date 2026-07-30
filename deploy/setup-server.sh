@@ -46,6 +46,9 @@ else
     curl -fsSL "${REPO_URL%.git}/archive/refs/heads/main.tar.gz" -o /tmp/mentor.tar.gz
     mkdir -p "$INSTALL_DIR"
     tar -xzf /tmp/mentor.tar.gz -C /tmp
+    # 防御性解除数据库与依赖目录的 immutable（若存在），避免覆盖失败
+    chattr -i -R "$INSTALL_DIR/server/data" 2>/dev/null || true
+    chattr -i -R "$INSTALL_DIR/node_modules" 2>/dev/null || true
     cp -a /tmp/mentoring-ability-main/. "$INSTALL_DIR"/ 2>/dev/null || true
     rm -rf /tmp/mentoring-ability-main /tmp/mentor.tar.gz
     # 初始化 git 以便将来可 git pull 更新
