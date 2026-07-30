@@ -33,7 +33,7 @@ function values() {
   return (overview.value?.dimensionAverages || []).map(d => d.avg)
 }
 function levelName(l) {
-  return { 1: '初始级', 2: '可重复级', 3: '已定义级', 4: '已管理级', 5: '优化级' }[l] || l
+  return { 1: '助理级', 2: '专业级', 3: '高级', 4: '大师级' }[l] || l
 }
 </script>
 

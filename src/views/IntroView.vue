@@ -1,24 +1,15 @@
 <script setup>
-import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAssessmentStore } from '../stores/assessment.js'
-import { api } from '../api/client.js'
+import { dimensions } from '../../shared/dimensions.js'
+import { questions } from '../../shared/questions.js'
+import { levels } from '../../shared/levels.js'
 
 const router = useRouter()
 const store = useAssessmentStore()
-const loading = ref(true)
-const error = ref('')
 
-onMounted(async () => {
-  try {
-    const meta = await api.get('/meta')
-    store.setMeta(meta)
-  } catch (e) {
-    error.value = e.message
-  } finally {
-    loading.value = false
-  }
-})
+const totalQuestions = questions.length
+const totalDims = dimensions.length
 
 function start() {
   store.resetAnswers()
@@ -27,31 +18,140 @@ function start() {
 </script>
 
 <template>
-  <div v-if="loading" class="muted center">加载中…</div>
-  <div v-else>
-    <div class="card hero">
+  <div class="intro">
+    <!-- Hero -->
+    <section class="hero card">
+      <div class="badge">12 维度 · 81 题 · 5 级量表</div>
       <h1>导师辅导能力成熟度自评</h1>
-      <p>
-        本测评基于成熟的能力成熟度模型（CMMI 风格），从 6 个核心维度评估你的辅导能力，
-        并给出从「初始级」到「优化级」的等级判定与针对性提升建议。共
-        {{ store.dimensions.length }} 个维度、约 24 道题，预计 5–8 分钟。
+      <p class="lead">
+        一套结构化、可复用的自评工具，帮助你客观看清自己作为导师的辅导能力处在哪一能级，
+        定位优势与短板，并获得可立即落地的提升建议。
       </p>
-      <div class="spacer"></div>
-      <button class="btn btn-primary" @click="start">开始测评 →</button>
-      <p v-if="error" class="alert" style="margin-top:16px">{{ error }}</p>
-    </div>
-
-    <div class="spacer"></div>
-    <div class="grid grid-3">
-      <div v-for="d in store.dimensions" :key="d.id" class="card dim">
-        <div class="tag">{{ d.short }}</div>
-        <h3 style="margin:10px 0 6px">{{ d.name }}</h3>
-        <p class="muted" style="font-size:13px;line-height:1.6;margin:0">{{ d.desc }}</p>
+      <div class="cta-row">
+        <button class="btn btn-primary" @click="start">免费开始测评 →</button>
+        <span class="est muted">约 8–12 分钟 · 无需付费 · 即时出报告</span>
       </div>
+    </section>
+
+    <!-- 价值主张 -->
+    <section class="values">
+      <div class="value">
+        <div class="v-icon">🎯</div>
+        <h3>看清真实能级</h3>
+        <p>用统一量表把「凭感觉」的辅导能力量化，给出助理级 / 专业级 / 高级 / 大师级四档判定。</p>
+      </div>
+      <div class="value">
+        <div class="v-icon">🧩</div>
+        <h3>12 维度全覆盖</h3>
+        <p>从关系建立、倾听理解到边界伦理、持续精进，覆盖导师辅导的关键能力域。</p>
+      </div>
+      <div class="value">
+        <div class="v-icon">📈</div>
+        <h3>拿到行动建议</h3>
+        <p>每个维度附低 / 中 / 高三档改进建议，测评完即可对照执行，而非只看分数。</p>
+      </div>
+    </section>
+
+    <!-- 适用人群 -->
+    <section class="card block">
+      <h2>谁适合用</h2>
+      <div class="audience">
+        <span class="chip">企业内导师 / 带教老师</span>
+        <span class="chip">管理者与团队 Leader</span>
+        <span class="chip">HR / 培训负责人</span>
+        <span class="chip">教练与顾问</span>
+        <span class="chip">想成为更好导师的任何人</span>
+      </div>
+    </section>
+
+    <!-- 12 维度 -->
+    <section class="block">
+      <div class="block-head">
+        <h2>测评覆盖的 12 个能力维度</h2>
+        <span class="muted">共 {{ totalQuestions }} 道自评题</span>
+      </div>
+      <div class="grid grid-3">
+        <div v-for="(d, i) in dimensions" :key="d.id" class="card dim">
+          <div class="dim-top">
+            <span class="idx" :style="{ background: d.color + '1a', color: d.color }">{{ i + 1 }}</span>
+            <span class="tag" :style="{ background: d.color + '1a', color: d.color }">{{ d.short }}</span>
+          </div>
+          <h3 style="margin:12px 0 6px">{{ d.name }}</h3>
+          <p class="muted" style="font-size:13px;line-height:1.6;margin:0">{{ d.desc }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 成熟度等级 -->
+    <section class="block">
+      <div class="block-head">
+        <h2>你的成熟度将被分为四档</h2>
+      </div>
+      <div class="levels">
+        <div v-for="lv in levels" :key="lv.level" class="card level" :style="{ borderLeftColor: lv.color }">
+          <div class="lv-head">
+            <span class="lv-name" :style="{ color: lv.color }">{{ lv.name }}</span>
+            <span class="lv-range muted">{{ lv.min }}–{{ lv.max }} 分</span>
+          </div>
+          <p class="muted" style="font-size:13px;line-height:1.6;margin:8px 0 0">{{ lv.desc }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 说明 -->
+    <section class="card block note">
+      <h2>测评说明</h2>
+      <ul>
+        <li>采用 5 级李克特量表：<b>1 从不 · 2 很少 · 3 有时 · 4 经常 · 5 总是</b>，请按真实情况作答。</li>
+        <li>题目逐题呈现，可自由前后切换；结果仅用于自我觉察与发展，不作任何评判。</li>
+        <li>提交后即生成个人能力雷达图与分维度提升建议，可随时重新测评对照成长。</li>
+      </ul>
+    </section>
+
+    <div class="bottom-cta">
+      <button class="btn btn-primary btn-block" @click="start">开始我的测评 →</button>
     </div>
   </div>
 </template>
 
 <style scoped>
+.intro { max-width: 960px; margin: 0 auto; }
+.hero { text-align: center; padding: 40px 28px; }
+.badge { display: inline-block; font-size: 13px; font-weight: 700; color: var(--primary); background: rgba(99,102,241,0.10); padding: 5px 14px; border-radius: 999px; margin-bottom: 14px; }
+.hero h1 { font-size: 32px; margin: 0 0 12px; color: var(--text); }
+.lead { color: var(--text-dim); line-height: 1.8; max-width: 640px; margin: 0 auto; font-size: 16px; }
+.cta-row { margin-top: 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.est { font-size: 13px; }
+
+.values { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 26px 0; }
+.value { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); }
+.v-icon { font-size: 28px; }
+.value h3 { margin: 10px 0 6px; font-size: 17px; }
+.value p { margin: 0; color: var(--text-dim); font-size: 14px; line-height: 1.65; }
+
+.block { margin-top: 28px; }
+.block-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+.block-head h2 { margin: 0; font-size: 20px; color: var(--text); }
+
+.audience { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip { background: var(--card-2); border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; padding: 7px 14px; border-radius: 999px; }
+
 .dim { padding: 18px; }
+.dim-top { display: flex; align-items: center; justify-content: space-between; }
+.idx { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+
+.levels { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.level { border-left: 4px solid var(--border); padding: 18px 20px; }
+.lv-head { display: flex; align-items: baseline; justify-content: space-between; }
+.lv-name { font-weight: 700; font-size: 16px; }
+.lv-range { font-size: 13px; }
+
+.note ul { margin: 8px 0 0; padding-left: 20px; color: var(--text-dim); line-height: 1.9; font-size: 14px; }
+.note b { color: var(--text); }
+
+.bottom-cta { margin: 30px 0 10px; }
+
+@media (max-width: 720px) {
+  .values, .levels { grid-template-columns: 1fr; }
+}
 </style>

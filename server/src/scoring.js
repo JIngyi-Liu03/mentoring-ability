@@ -5,7 +5,7 @@ import { getLevel } from '../../shared/levels.js'
 
 // 返回 { overall, overallLevel, dimensionScores:[{id,name,avg,level}] }
 export function computeScores(answers) {
-  const questionDim = Object.fromEntries(questions.map(q => [q.id, q.dimId]))
+  const questionDim = Object.fromEntries(questions.map(q => [q.id, q.dim]))
 
   const sums = {}
   const counts = {}

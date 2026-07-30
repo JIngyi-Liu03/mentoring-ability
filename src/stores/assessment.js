@@ -1,4 +1,6 @@
 import { defineStore } from 'pinia'
+import { questions } from '../../shared/questions.js'
+import { api } from '../api/client.js'
 
 const TOKEN_KEY = 'mentor_token'
 const USER_KEY = 'mentor_user'
@@ -33,24 +35,34 @@ export const useUserStore = defineStore('user', {
   }
 })
 
-// 答题进度与结果
+// 答题进度与结果（单题平铺模式）
 export const useAssessmentStore = defineStore('assessment', {
   state: () => ({
-    meta: null,        // { dimensions, questions, questionsByDim, levels }
-    answers: {},       // { questionId: 1-5 }
-    step: 0,           // 当前维度步序
-    lastResult: null   // 最近一次提交返回的结果
+    answers: questions.map(q => ({ qid: q.id, dim: q.dim, value: null })),
+    currentIndex: 0,
+    lastResult: null
   }),
   getters: {
-    dimensions: (s) => s.meta?.dimensions || [],
-    totalSteps: (s) => s.meta?.dimensions?.length || 0,
-    answeredCount: (s) => Object.keys(s.answers).length
+    total: (s) => s.answers.length,
+    answeredCount: (s) => s.answers.filter(a => a.value !== null).length,
+    answersMap: (s) => Object.fromEntries(s.answers.map(a => [a.qid, a.value]))
   },
   actions: {
-    setMeta(meta) { this.meta = meta },
-    setAnswer(qid, value) { this.answers[qid] = value },
-    resetAnswers() { this.answers = {}; this.step = 0 },
+    setAnswer(index, value) {
+      if (this.answers[index]) this.answers[index].value = value
+    },
+    resetAnswers() {
+      this.answers = questions.map(q => ({ qid: q.id, dim: q.dim, value: null }))
+      this.currentIndex = 0
+    },
     setResult(r) { this.lastResult = r },
-    restoreResult(r) { this.lastResult = r }
+    restoreResult(r) { this.lastResult = r },
+    async submit() {
+      const payload = {}
+      for (const a of this.answers) if (a.value != null) payload[a.qid] = a.value
+      const data = await api.post('/assessment/submit', { answers: payload })
+      this.lastResult = data
+      return data
+    }
   }
 })

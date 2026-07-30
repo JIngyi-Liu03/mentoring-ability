@@ -46,13 +46,13 @@ function logout() {
 </template>
 
 <style scoped>
-.topbar { border-bottom: 1px solid var(--border); background: rgba(15,18,38,0.7); backdrop-filter: blur(8px); }
+.topbar { border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); }
 .topbar-inner { max-width: 960px; margin: 0 auto; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
-.brand { font-weight: 700; cursor: pointer; }
+.brand { font-weight: 700; cursor: pointer; color: var(--text); }
 .nav { display: flex; gap: 16px; align-items: center; }
 .nav a { color: var(--text-dim); font-size: 14px; }
-.nav a.router-link-active { color: var(--text); }
+.nav a.router-link-active { color: var(--primary); }
 .who { color: var(--text-dim); font-size: 13px; }
 .btn-sm { padding: 6px 12px; font-size: 13px; }
-.foot { text-align: center; padding: 18px; color: var(--text-dim); font-size: 12px; border-top: 1px solid var(--border); }
+.foot { text-align: center; padding: 18px; color: var(--text-dim); font-size: 12px; border-top: 1px solid var(--border); background: #fff; }
 </style>

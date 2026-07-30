@@ -1,101 +1,101 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAssessmentStore } from '../stores/assessment.js'
-import { api } from '../api/client.js'
 import QuestionCard from '../components/QuestionCard.vue'
-import StepProgress from '../components/StepProgress.vue'
+import { questions } from '../../shared/questions.js'
+import { dimensionMap } from '../../shared/dimensions.js'
 
 const router = useRouter()
 const store = useAssessmentStore()
-const submitting = ref(false)
-const error = ref('')
 
-onMounted(async () => {
-  if (!store.meta) {
-    try {
-      const meta = await api.get('/meta')
-      store.setMeta(meta)
-    } catch (e) {
-      error.value = e.message
-    }
-  }
-})
+const total = questions.length
+const idx = computed(() => Math.min(store.currentIndex, total - 1))
+const q = computed(() => questions[idx.value])
+const dim = computed(() => dimensionMap[q.value.dim])
+const progress = computed(() => Math.round(((idx.value + 1) / total) * 100))
 
-const dimensions = computed(() => store.dimensions)
-const currentDim = computed(() => dimensions.value[store.step] || null)
-const questions = computed(() => {
-  if (!currentDim.value || !store.meta?.questionsByDim) return []
-  return store.meta.questionsByDim[currentDim.value.id] || []
-})
-const stepComplete = computed(() => questions.value.every(q => store.answers[q.id]))
+const answeredCount = computed(() => store.answers.filter(a => a.value !== null).length)
+const canPrev = computed(() => idx.value > 0)
+const canNext = computed(() => store.answers[idx.value]?.value != null)
 
-function next() {
-  if (!stepComplete.value) return
-  if (store.step < dimensions.value.length - 1) store.step++
-  else submit()
-}
 function prev() {
-  if (store.step > 0) store.step--
+  if (canPrev.value) store.currentIndex = idx.value - 1
 }
-
+function next() {
+  if (idx.value < total - 1) {
+    store.currentIndex = idx.value + 1
+  } else {
+    submit()
+  }
+}
 async function submit() {
-  error.value = ''
-  const answers = {}
-  for (const q of store.meta.questions) {
-    if (store.answers[q.id]) answers[q.id] = store.answers[q.id]
-  }
-  if (Object.keys(answers).length < store.meta.questions.length) {
-    error.value = '请完成所有题目后再提交'
-    return
-  }
-  submitting.value = true
-  try {
-    const res = await api.post('/assessment/submit', { answers })
-    store.setResult(res)
-    router.push('/result')
-  } catch (e) {
-    error.value = e.message
-  } finally {
-    submitting.value = false
-  }
+  await store.submit()
+  router.push('/result')
 }
 </script>
 
 <template>
-  <div v-if="error && !currentDim" class="alert">{{ error }}</div>
-  <div v-else-if="currentDim" class="card">
-    <StepProgress :steps="dimensions" :current="store.step" />
-    <div class="dim-head">
-      <div>
-        <div class="tag">{{ currentDim.short }}</div>
-        <h2 style="margin:8px 0 4px">{{ currentDim.name }}</h2>
-        <p class="muted" style="margin:0;font-size:13px">{{ currentDim.desc }}</p>
+  <div class="assess">
+    <!-- 顶部进度 -->
+    <div class="progress-head">
+      <button class="link-btn" @click="router.push('/intro')">← 退出</button>
+      <div class="progress-meta">
+        <span class="q-counter">第 {{ idx + 1 }} / {{ total }} 题</span>
+        <span class="answered">已答 {{ answeredCount }}</span>
       </div>
-      <div class="step-no">第 {{ store.step + 1 }} / {{ dimensions.length }} 步</div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" :style="{ width: progress + '%' }"></div>
     </div>
 
-    <div class="spacer"></div>
-    <QuestionCard
-      v-for="q in questions"
-      :key="q.id"
-      :question="q"
-      :model-value="store.answers[q.id] || null"
-      @update:model-value="v => store.setAnswer(q.id, v)"
-    />
+    <!-- 单题卡片 -->
+    <div class="q-card-wrap">
+      <div class="dim-tag" :style="{ background: dim.color + '1a', color: dim.color }">
+        {{ dim.short }}
+      </div>
+      <h2 class="q-text">{{ q.text }}</h2>
 
-    <div v-if="error" class="alert" style="margin-top:16px">{{ error }}</div>
+      <QuestionCard
+        :modelValue="store.answers[idx]?.value ?? null"
+        :dimColor="dim.color"
+        @update:modelValue="v => store.setAnswer(idx, v)"
+      />
+    </div>
 
-    <div class="row between" style="margin-top:22px">
-      <button class="btn btn-ghost" :disabled="store.step === 0" @click="prev">← 上一步</button>
-      <button class="btn btn-primary" :disabled="!stepComplete || submitting" @click="next">
-        {{ store.step === dimensions.length - 1 ? (submitting ? '提交中…' : '提交并查看报告') : '下一步 →' }}
+    <!-- 底部导航 -->
+    <div class="nav-row">
+      <button class="btn btn-ghost" :disabled="!canPrev" @click="prev">上一题</button>
+      <button v-if="idx < total - 1" class="btn btn-primary" :disabled="!canNext" @click="next">
+        下一题
+      </button>
+      <button v-else class="btn btn-primary" :disabled="answeredCount < total" @click="submit">
+        提交测评
       </button>
     </div>
+    <p v-if="answeredCount < total" class="hint muted">请先选择一项，再进入下一题。</p>
   </div>
 </template>
 
 <style scoped>
-.dim-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.step-no { font-size: 13px; color: var(--text-dim); white-space: nowrap; }
+.assess { max-width: 720px; margin: 0 auto; padding: 18px 16px 40px; }
+.progress-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.progress-meta { display: flex; gap: 14px; align-items: baseline; }
+.q-counter { font-weight: 700; color: var(--text); font-size: 15px; }
+.answered { font-size: 13px; color: var(--text-dim); }
+.link-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; padding: 4px 0; }
+.link-btn:hover { color: var(--primary); }
+.progress-track { height: 8px; border-radius: 999px; background: #eef0f4; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--primary), var(--primary-2)); transition: width .25s ease; }
+
+.q-card-wrap {
+  margin-top: 26px; background: #fff; border: 1px solid var(--border);
+  border-radius: 18px; padding: 28px 24px; box-shadow: 0 6px 24px rgba(20,30,60,.06);
+}
+.dim-tag { display: inline-block; font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 999px; margin-bottom: 14px; }
+.q-text { font-size: 20px; line-height: 1.6; color: var(--text); margin: 0 0 26px; font-weight: 600; }
+
+.nav-row { display: flex; gap: 12px; margin-top: 22px; }
+.nav-row .btn { flex: 1; }
+.hint { text-align: center; margin-top: 12px; font-size: 13px; }
 </style>

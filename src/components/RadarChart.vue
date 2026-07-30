@@ -18,10 +18,10 @@ function render() {
     radar: {
       indicator: props.indicators,
       radius: '70%',
-      axisName: { color: '#cdd6ff', fontSize: 12 },
-      splitArea: { areaStyle: { color: ['rgba(108,140,255,0.05)', 'rgba(108,140,255,0.10)'] } },
-      splitLine: { lineStyle: { color: 'rgba(255,255,255,0.12)' } },
-      axisLine: { lineStyle: { color: 'rgba(255,255,255,0.12)' } }
+      axisName: { color: '#6b7280', fontSize: 12 },
+      splitArea: { areaStyle: { color: ['rgba(99,102,241,0.04)', 'rgba(99,102,241,0.08)'] } },
+      splitLine: { lineStyle: { color: 'rgba(31,37,51,0.10)' } },
+      axisLine: { lineStyle: { color: 'rgba(31,37,51,0.10)' } }
     },
     series: [{
       type: 'radar',
