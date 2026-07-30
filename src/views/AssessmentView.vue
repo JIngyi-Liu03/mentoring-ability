@@ -17,7 +17,6 @@ const progress = computed(() => Math.round(((idx.value + 1) / total) * 100))
 
 const answeredCount = computed(() => store.answers.filter(a => a.value !== null).length)
 const canPrev = computed(() => idx.value > 0)
-const canNext = computed(() => store.answers[idx.value]?.value != null)
 
 function prev() {
   if (canPrev.value) store.currentIndex = idx.value - 1
@@ -79,14 +78,10 @@ function onAnswer(v) {
     <!-- 底部导航 -->
     <div class="nav-row">
       <button class="btn btn-ghost" :disabled="!canPrev" @click="prev">上一题</button>
-      <button v-if="idx < total - 1" class="btn btn-primary" :disabled="!canNext" @click="next">
-        下一题
-      </button>
-      <button v-else class="btn btn-primary" :disabled="answeredCount < total" @click="submit">
+      <button v-if="idx === total - 1" class="btn btn-primary" :disabled="answeredCount < total" @click="submit">
         提交测评
       </button>
     </div>
-    <p v-if="answeredCount < total" class="hint muted">请先选择一项，再进入下一题。</p>
   </div>
 </template>
 
