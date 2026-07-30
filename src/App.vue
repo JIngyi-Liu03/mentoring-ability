@@ -47,7 +47,7 @@ function logout() {
 
 <style scoped>
 .topbar { border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); }
-.topbar-inner { max-width: 960px; margin: 0 auto; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
+.topbar-inner { max-width: 1080px; margin: 0 auto; padding: 12px 12px; display: flex; justify-content: space-between; align-items: center; }
 .brand { font-weight: 700; cursor: pointer; color: var(--text); }
 .nav { display: flex; gap: 16px; align-items: center; }
 .nav a { color: var(--text-dim); font-size: 14px; }

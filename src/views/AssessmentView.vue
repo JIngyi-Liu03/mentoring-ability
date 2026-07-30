@@ -78,7 +78,7 @@ async function submit() {
 </template>
 
 <style scoped>
-.assess { max-width: 720px; margin: 0 auto; padding: 18px 16px 40px; }
+.assess { max-width: 820px; margin: 0 auto; padding: 12px 10px 28px; }
 .progress-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .progress-meta { display: flex; gap: 14px; align-items: baseline; }
 .q-counter { font-weight: 700; color: var(--text); font-size: 15px; }
@@ -89,8 +89,8 @@ async function submit() {
 .progress-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--primary), var(--primary-2)); transition: width .25s ease; }
 
 .q-card-wrap {
-  margin-top: 26px; background: #fff; border: 1px solid var(--border);
-  border-radius: 18px; padding: 28px 24px; box-shadow: 0 6px 24px rgba(20,30,60,.06);
+  margin-top: 18px; background: #fff; border: 1px solid var(--border);
+  border-radius: 18px; padding: 20px 16px; box-shadow: 0 6px 24px rgba(20,30,60,.06);
 }
 .dim-tag { display: inline-block; font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 999px; margin-bottom: 14px; }
 .q-text { font-size: 20px; line-height: 1.6; color: var(--text); margin: 0 0 26px; font-weight: 600; }

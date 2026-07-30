@@ -13,12 +13,14 @@ const route = useRoute()
 const mode = ref('login') // login | register
 const username = ref('')
 const password = ref('')
+const email = ref('')
 const error = ref('')
 const loading = ref(false)
 
 const isLogin = computed(() => mode.value === 'login')
 
 function switchMode(m) { mode.value = m; error.value = '' }
+function goForgot() { router.push('/forgot') }
 
 async function submit() {
   error.value = ''
@@ -27,7 +29,7 @@ async function submit() {
   try {
     const data = isLogin.value
       ? await api.post('/auth/login', { username: username.value, password: password.value })
-      : await api.post('/auth/register', { username: username.value, password: password.value })
+      : await api.post('/auth/register', { username: username.value, password: password.value, email: email.value.trim() })
     user.setSession(data.token, data.user)
     const redirect = route.query.redirect
     if (redirect) router.push(redirect)
@@ -64,13 +66,21 @@ async function submit() {
         <label>密码</label>
         <input v-model="password" type="password" placeholder="至少 6 位" @keyup.enter="submit" />
       </div>
+      <div class="field" v-if="!isLogin">
+        <label>邮箱（用于找回密码）</label>
+        <input v-model="email" type="email" placeholder="用于找回密码，可选" />
+      </div>
 
       <button class="btn btn-primary btn-block" :disabled="loading" @click="submit">
         {{ loading ? '处理中…' : (isLogin ? '登录' : '注册并进入') }}
       </button>
 
-      <p class="muted center" style="margin-top:16px;font-size:13px">
-        管理员账号：admin / admin123（可在 .env 修改）
+      <p class="muted center" style="margin-top:14px;font-size:13px">
+        <a style="color:var(--primary);cursor:pointer" @click="goForgot">忘记密码？</a>
+      </p>
+
+      <p class="muted center" style="margin-top:6px;font-size:13px">
+        管理员账号：admin / mentoringco2026（可在 .env 修改）
       </p>
     </div>
   </div>

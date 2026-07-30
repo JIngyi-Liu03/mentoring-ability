@@ -115,8 +115,8 @@ function start() {
 </template>
 
 <style scoped>
-.intro { max-width: 960px; margin: 0 auto; }
-.hero { text-align: center; padding: 40px 28px; }
+.intro { max-width: 1080px; margin: 0 auto; }
+.hero { text-align: center; padding: 28px 20px; }
 .badge { display: inline-block; font-size: 13px; font-weight: 700; color: var(--primary); background: rgba(99,102,241,0.10); padding: 5px 14px; border-radius: 999px; margin-bottom: 14px; }
 .hero h1 { font-size: 32px; margin: 0 0 12px; color: var(--text); }
 .lead { color: var(--text-dim); line-height: 1.8; max-width: 640px; margin: 0 auto; font-size: 16px; }

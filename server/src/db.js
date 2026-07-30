@@ -16,12 +16,20 @@ const db = new DatabaseSync(dbPath)
 db.exec('PRAGMA journal_mode = WAL;')
 db.exec('PRAGMA foreign_keys = ON;')
 
+// 已存在的库可能缺少 email 列，安全补列（列已存在时会抛错，忽略即可）
+try {
+  db.prepare('ALTER TABLE users ADD COLUMN email TEXT').run()
+} catch (e) {
+  // column already exists
+}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'user',
+    email TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -29,6 +37,14 @@ db.exec(`
     token TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL,
     expires_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS password_resets (
+    token TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    expires_at TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
 
@@ -51,11 +67,16 @@ db.exec(`
 function ensureAdmin() {
   const username = process.env.ADMIN_USERNAME || 'admin'
   const password = process.env.ADMIN_PASSWORD || 'admin123'
-  const exists = db.prepare('SELECT id FROM users WHERE username = ?').get(username)
+  const exists = db.prepare('SELECT id, password_hash FROM users WHERE username = ?').get(username)
   if (!exists) {
     db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)')
       .run(username, cryptoHash.hash(password), 'admin')
     console.log(`[seed] 已创建管理员账号: ${username} / ${password}`)
+  } else if (!cryptoHash.verify(password, exists.password_hash)) {
+    // .env 中的管理员密码与库中不一致时，以 .env 为准同步更新，确保可用
+    db.prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+      .run(cryptoHash.hash(password), exists.id)
+    console.log(`[seed] 已按 .env 同步更新管理员密码: ${username} / ${password}`)
   }
 }
 ensureAdmin()

@@ -9,6 +9,12 @@ const routes = [
     component: () => import('../views/LoginView.vue'),
     meta: { public: true }
   },
+  {
+    path: '/forgot',
+    name: 'forgot',
+    component: () => import('../views/ForgotPasswordView.vue'),
+    meta: { public: true }
+  },
   { path: '/intro', name: 'intro', component: () => import('../views/IntroView.vue') },
   { path: '/assessment', name: 'assessment', component: () => import('../views/AssessmentView.vue') },
   { path: '/result', name: 'result', component: () => import('../views/ResultView.vue') },
