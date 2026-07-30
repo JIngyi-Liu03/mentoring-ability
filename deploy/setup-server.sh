@@ -27,13 +27,28 @@ done
 NODE_VER=$(node -v)
 echo "    Node 版本: $NODE_VER（需 >= 22.5，启动脚本会自动兼容 22/24）"
 
-echo "==> [2/9] 克隆代码到 $INSTALL_DIR"
+echo "==> [2/9] 获取代码到 $INSTALL_DIR"
+# 说明：部分国内服务器访问 github.com 的 git 智能 HTTP 接口会被限流（GnuTLS recv error），
+# 因此优先用 HTTP/1.1 克隆；若失败则回退到 codeload 的 tarball 下载（该通道通常可用）。
 if [ -d "$INSTALL_DIR/.git" ]; then
-  echo "    目录已存在，执行 git pull 更新"
-  git -C "$INSTALL_DIR" pull --ff-only
+  echo "    目录已是 git 仓库，执行 git pull 更新"
+  git -C "$INSTALL_DIR" -c http.version=HTTP/1.1 pull --ff-only
 else
   rm -rf "$INSTALL_DIR"
-  git clone "$REPO_URL" "$INSTALL_DIR"
+  if git -c http.version=HTTP/1.1 clone "$REPO_URL" "$INSTALL_DIR" 2>/dev/null; then
+    echo "    git clone 成功"
+  else
+    echo "    git clone 失败，改用 tarball 方式获取"
+    curl -fsSL "${REPO_URL%.git}/archive/refs/heads/main.tar.gz" -o /tmp/mentor.tar.gz
+    mkdir -p "$INSTALL_DIR"
+    tar -xzf /tmp/mentor.tar.gz -C /tmp
+    cp -a /tmp/mentoring-ability-main/. "$INSTALL_DIR"/ 2>/dev/null || true
+    rm -rf /tmp/mentoring-ability-main /tmp/mentor.tar.gz
+    # 初始化 git 以便将来可 git pull 更新
+    git -C "$INSTALL_DIR" init -q 2>/dev/null || true
+    git -C "$INSTALL_DIR" remote add origin "$REPO_URL" 2>/dev/null || true
+    echo "    tarball 解压完成"
+  fi
 fi
 cd "$INSTALL_DIR"
 
