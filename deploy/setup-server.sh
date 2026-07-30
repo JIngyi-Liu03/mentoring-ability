@@ -20,6 +20,10 @@ REPO_URL="${REPO_URL:-https://github.com/JIngyi-Liu03/mentoring-ability.git}"
 INSTALL_DIR="/opt/mentor-ability"
 APP_USER="mentor"
 
+# 允许 root 操作后续会被 chown 给低权限账户 $APP_USER 的仓库，
+# 避免 re-run 时 git 报 “detected dubious ownership” 而中断（set -e 下会退出）。
+git config --global --add safe.directory "$INSTALL_DIR" 2>/dev/null || true
+
 echo "==> [1/9] 检查基础环境（git / node / npm / openssl）"
 for c in git node npm openssl; do
   command -v "$c" >/dev/null 2>&1 || { echo "ERROR: 缺少命令 $c，请先安装"; exit 1; }
