@@ -36,10 +36,10 @@ async function submit() {
 // 选中选项后自动进入下一题（最后一题不自动提交，避免误交）
 let advanceTimer = null
 function onAnswer(v) {
+  if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null }
   store.setAnswer(idx.value, v)
   if (v == null) return                       // 取消选择不前进
   if (idx.value >= total - 1) return          // 最后一题仅记录答案
-  if (advanceTimer) clearTimeout(advanceTimer)
   advanceTimer = setTimeout(() => {
     advanceTimer = null
     next()
@@ -78,7 +78,7 @@ function onAnswer(v) {
     <!-- 底部导航 -->
     <div class="nav-row">
       <button class="btn btn-ghost" :disabled="!canPrev" @click="prev">上一题</button>
-      <button v-if="idx === total - 1" class="btn btn-primary" :disabled="answeredCount < total" @click="submit">
+      <button v-if="idx === total - 1" class="btn btn-primary" :disabled="!store.answers[idx]?.value" @click="submit">
         提交测评
       </button>
     </div>
