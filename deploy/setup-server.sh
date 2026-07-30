@@ -16,7 +16,7 @@
 # ============================================================================
 set -euo pipefail
 
-REPO_URL="${REPO_URL:-https://github.com/JIngyi-Liu03/mentor-ability001.git}"
+REPO_URL="${REPO_URL:-https://github.com/JIngyi-Liu03/mentoring-ability.git}"
 INSTALL_DIR="/opt/mentor-ability"
 APP_USER="mentor"
 
