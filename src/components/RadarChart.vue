@@ -19,7 +19,7 @@ function render() {
       indicator: props.indicators,
       radius: '70%',
       axisName: { color: '#6b7280', fontSize: 12 },
-      splitArea: { areaStyle: { color: ['rgba(99,102,241,0.04)', 'rgba(99,102,241,0.08)'] } },
+      splitArea: { areaStyle: { color: ['rgba(31,37,51,0.03)', 'rgba(31,37,51,0.06)'] } },
       splitLine: { lineStyle: { color: 'rgba(31,37,51,0.10)' } },
       axisLine: { lineStyle: { color: 'rgba(31,37,51,0.10)' } }
     },

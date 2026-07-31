@@ -68,15 +68,31 @@ echo "    dist 构建完成：$(ls dist | head)"
 echo "    dist-admin 构建完成：$(ls dist-admin | head)"
 
 echo "==> [4/9] 生成生产 .env（自动随机安全密钥）"
+# 如果已有 .env，先备份其中的短信配置，避免重新部署时丢失
+SMS_BACKUP=""
+if [ -f .env ]; then
+  SMS_BACKUP=$(grep -E '^(TENCENT_SECRET_ID|TENCENT_SECRET_KEY|SMS_SDK_APP_ID|SMS_SIGN_NAME|SMS_TEMPLATE_ID|SMS_CODE_TTL|SMS_SEND_INTERVAL)=' .env 2>/dev/null || true)
+fi
 cp .env.production .env
 AUTH_SECRET="$(openssl rand -hex 32)"
 ADMIN_PASSWORD="$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9' | head -c 16)"
 # 替换模板占位符
 sed -i "s#__CHANGE_ME_auth_secret_generate_with_openssl_rand_hex_32__#${AUTH_SECRET}#" .env
 sed -i "s#__CHANGE_ME_admin_password__#${ADMIN_PASSWORD}#" .env
+# 如果有之前保存的短信配置，追加到 .env 末尾（覆盖模板中的占位符行）
+if [ -n "$SMS_BACKUP" ]; then
+  echo "$SMS_BACKUP" > /tmp/sms_env_$$
+  while IFS= read -r line; do
+    key="${line%%=*}"
+    sed -i "/^${key}=/c\\${line}" .env
+  done < /tmp/sms_env_$$
+  rm -f /tmp/sms_env_$$
+  echo "    已从旧 .env 恢复短信配置"
+fi
 echo "    ⚠️  请妥善保存以下管理员凭据（仅此显示一次）："
 echo "    管理员账号: admin"
 echo "    管理员密码: ${ADMIN_PASSWORD}"
+echo "    ⚠️  如短信配置未填写，请手动编辑 .env 补充 TENCENT_SECRET_ID 等"
 
 echo "==> [5/9] 设置启动脚本权限"
 chmod +x server/start.sh

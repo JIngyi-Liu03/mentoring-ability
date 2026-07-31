@@ -23,6 +23,27 @@ try {
   // column already exists
 }
 
+// 短信验证码登录：安全补列 phone
+try {
+  db.prepare('ALTER TABLE users ADD COLUMN phone TEXT').run()
+} catch (e) {
+  // column already exists
+}
+
+// 注册时填写的真实姓名
+try {
+  db.prepare('ALTER TABLE users ADD COLUMN name TEXT').run()
+} catch (e) {
+  // column already exists
+}
+
+// phone 唯一索引（一个手机号一个用户）
+try {
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone ON users(phone) WHERE phone IS NOT NULL')
+} catch (e) {
+  // index already exists
+}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,6 +82,17 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_results_user ON results(user_id);
   CREATE INDEX IF NOT EXISTS idx_results_created ON results(created_at);
+
+  CREATE TABLE IF NOT EXISTS sms_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    phone TEXT NOT NULL,
+    code TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    consumed INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_sms_codes_phone ON sms_codes(phone);
 `)
 
 // 首次启动：创建管理员账号

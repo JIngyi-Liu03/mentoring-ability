@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 
 const props = defineProps({
   modelValue: { type: [Number, null], default: null },
-  dimColor: { type: String, default: '#6366f1' }
+  dimColor: { type: String, default: '#1c8a8b' }
 })
 const emit = defineEmits(['update:modelValue'])
 

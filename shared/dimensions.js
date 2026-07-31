@@ -1,17 +1,18 @@
-// 12 个能力维度（依据《导师辅导能力成熟度自评》最终版）
+// 12 个能力维度（依据《导师辅导能力成熟度诊断报告》模板）
+// 配色策略：只用商标双色调（青蓝主色 #1c8a8b + 橙强调色 #ea7c2a）
 export const dimensions = [
-  { id: 'relationship', short: '关系建立', name: '关系建立', color: '#6366f1', desc: '与学员建立信任、安全、稳定的辅导关系，奠定辅导基础。' },
-  { id: 'listen', short: '倾听理解', name: '倾听理解', color: '#0ea5e9', desc: '专注、不带评判地倾听，准确理解学员的表达与隐含需求。' },
-  { id: 'inquiry', short: '提问启发', name: '提问启发', color: '#10b981', desc: '用开放式、启发式提问引导学员自己思考与发现答案。' },
-  { id: 'goal', short: '目标设定', name: '目标设定', color: '#f59e0b', desc: '与学员共同澄清目标，将其转化为可衡量、可落地的行动。' },
-  { id: 'feedback', short: '反馈给予', name: '反馈给予', color: '#ef4444', desc: '基于事实给予具体、及时、建设性的反馈，助力学员成长。' },
-  { id: 'growth', short: '成长引导', name: '成长引导', color: '#8b5cf6', desc: '激发学员潜能，培养其独立解决问题与持续成长的能力。' },
-  { id: 'reflection', short: '反思复盘', name: '反思复盘', color: '#14b8a6', desc: '引导学员定期复盘，将经历转化为可迁移的经验与认知。' },
-  { id: 'emotion', short: '情绪支持', name: '情绪支持', color: '#ec4899', desc: '识别并接纳学员情绪，在安全氛围中给予恰当的情绪疏导。' },
-  { id: 'personalize', short: '个性化辅导', name: '个性化辅导', color: '#f97316', desc: '识别学员差异，因材施教，灵活调整辅导策略与节奏。' },
-  { id: 'resource', short: '资源链接', name: '资源链接', color: '#22c55e', desc: '识别学员需求，链接并整合内外部资源与机会。' },
-  { id: 'ethics', short: '边界与伦理', name: '边界与伦理', color: '#64748b', desc: '恪守辅导边界与职业伦理，保护学员隐私与自主。' },
-  { id: 'improve', short: '持续精进', name: '持续精进', color: '#3b82f6', desc: '持续学习、反思并迭代自身辅导方法，追求专业精进。' }
+  { id: 'self',          short: '自我认知', name: '维度一：自我认知与自我发展',         color: '#1c8a8b', desc: '觉察自身优势与短板，持续规划个人作为导师的成长。' },
+  { id: 'goal',          short: '目标设定', name: '维度二：导师辅导方向的明确与目标设定', color: '#1c8a8b', desc: '与学员共同澄清辅导方向，将目标转化为可衡量、可落地的行动。' },
+  { id: 'relationship',  short: '关系建立', name: '维度三：导师辅导关系建立与维护',       color: '#1c8a8b', desc: '与学员建立信任、安全、稳定的辅导关系，并持续维护。' },
+  { id: 'coaching',      short: '教练技术', name: '维度四：教练技术运用与促进洞察',         color: '#1c8a8b', desc: '运用开放式提问与教练技术，促进学员自我洞察与发现答案。' },
+  { id: 'resource',      short: '资源激活', name: '维度五：发现并激活身边的资源',           color: '#1c8a8b', desc: '识别学员需求，链接并激活内外部资源与机会。' },
+  { id: 'knowledge',     short: '知识传承', name: '维度六：知识传承与隐性知识管理',         color: '#1c8a8b', desc: '有效传递显性知识，萃取并管理隐性经验与方法。' },
+  { id: 'tool',          short: '技术应用', name: '维度七：技术与工具的运用',               color: '#1c8a8b', desc: '熟练运用辅导模型、工具与数字化手段提升辅导效能。' },
+  { id: 'outcome',       short: '成果检验', name: '维度八：成果检验（KPI & KBI）与行动推动', color: '#1c8a8b', desc: '设定检验标准，推动学员行动落地并检验辅导成效。' },
+  { id: 'communication', short: '沟通推广', name: '维度九：沟通、倡导与推广',               color: '#1c8a8b', desc: '清晰沟通、有效倡导，并推广导师辅导的价值与文化。' },
+  { id: 'reflection',    short: '评估反思', name: '维度十：评估与反思',                     color: '#1c8a8b', desc: '系统评估辅导过程，在复盘与反思中持续迭代方法。' },
+  { id: 'system',        short: '系统思维', name: '维度十一：全局视野与系统思维',           color: '#1c8a8b', desc: '以全局视野与系统思维看待学员成长与组织环境。' },
+  { id: 'ethic',         short: '职业道德', name: '维度十二：职业道德与行为准则',           color: '#ea7c2a', desc: '恪守职业伦理与行为准则，保护学员并守住边界。' }
 ]
 
 export const dimensionMap = Object.fromEntries(dimensions.map(d => [d.id, d]))

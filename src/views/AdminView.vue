@@ -85,11 +85,12 @@ function levelName(l) {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>用户名</th><th>角色</th><th>测评次数</th><th>最新得分</th><th>等级</th></tr>
+            <tr><th>用户名</th><th>姓名</th><th>角色</th><th>测评次数</th><th>最新得分</th><th>等级</th></tr>
           </thead>
           <tbody>
             <tr v-for="u in users" :key="u.id">
               <td>{{ u.username }}</td>
+              <td>{{ u.name || '—' }}</td>
               <td><span class="tag">{{ u.role }}</span></td>
               <td>{{ u.assessments }}</td>
               <td>{{ u.latest_overall ?? '—' }}</td>
@@ -106,12 +107,13 @@ function levelName(l) {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>ID</th><th>用户</th><th>综合得分</th><th>等级</th><th>时间</th></tr>
+            <tr><th>ID</th><th>用户</th><th>姓名</th><th>综合得分</th><th>等级</th><th>时间</th></tr>
           </thead>
           <tbody>
             <tr v-for="r in results" :key="r.id">
               <td>#{{ r.id }}</td>
               <td>{{ r.username }}</td>
+              <td>{{ r.name || '—' }}</td>
               <td>{{ r.overall }}</td>
               <td>{{ levelName(r.overall_level) }}</td>
               <td class="muted">{{ r.created_at }}</td>

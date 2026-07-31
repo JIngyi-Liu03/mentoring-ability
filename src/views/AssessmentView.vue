@@ -29,8 +29,8 @@ function next() {
   }
 }
 async function submit() {
-  await store.submit()
-  router.push('/result')
+    await store.submit()
+    router.push('/result')
 }
 
 // 选中选项后自动进入下一题（最后一题不自动提交，避免误交）
@@ -51,7 +51,7 @@ function onAnswer(v) {
   <div class="assess">
     <!-- 顶部进度 -->
     <div class="progress-head">
-      <button class="link-btn" @click="router.push('/intro')">← 退出</button>
+      <button class="link-btn" @click="router.push('/intro')">退出</button>
       <div class="progress-meta">
         <span class="q-counter">第 {{ idx + 1 }} / {{ total }} 题</span>
         <span class="answered">已答 {{ answeredCount }}</span>
@@ -94,7 +94,7 @@ function onAnswer(v) {
 .link-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; padding: 4px 0; }
 .link-btn:hover { color: var(--primary); }
 .progress-track { height: 8px; border-radius: 999px; background: #eef0f4; overflow: hidden; }
-.progress-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--primary), var(--primary-2)); transition: width .25s ease; }
+.progress-fill { height: 100%; border-radius: 999px; background: var(--primary); transition: width .25s ease; }
 
 .q-card-wrap {
   margin-top: 18px; background: #fff; border: 1px solid var(--border);

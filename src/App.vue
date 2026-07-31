@@ -2,6 +2,7 @@
 import { useUserStore } from './stores/assessment.js'
 import { useRouter, useRoute } from 'vue-router'
 import { computed } from 'vue'
+import logo from './assets/logo.webp'
 
 const user = useUserStore()
 const router = useRouter()
@@ -21,17 +22,21 @@ function logout() {
 
 <template>
   <div class="app-shell">
+    <!-- 商标：始终在页面左上角（使用用户提供的原图） -->
+    <router-link to="/intro" class="brand-link" aria-label="返回首页">
+      <img :src="logo" class="brand-logo" alt="MentoringCo" />
+    </router-link>
+
     <header v-if="showNav && !onLogin" class="topbar">
       <div class="topbar-inner">
-        <div class="brand" @click="goHome">🧭 导师辅导能力成熟度自评</div>
-        <nav class="nav">
+        <div class="nav">
           <template v-if="user.isAdmin">
             <router-link to="/admin">管理看板</router-link>
           </template>
           <router-link to="/intro">测评</router-link>
-          <span class="who">你好，{{ user.user?.username }}</span>
+          <span class="who">你好，{{ user.user?.name || user.user?.username }}</span>
           <button class="btn btn-ghost btn-sm" @click="logout">退出</button>
-        </nav>
+        </div>
       </div>
     </header>
 
@@ -46,13 +51,30 @@ function logout() {
 </template>
 
 <style scoped>
-.topbar { border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); }
-.topbar-inner { max-width: 1080px; margin: 0 auto; padding: 12px 12px; display: flex; justify-content: space-between; align-items: center; }
-.brand { font-weight: 700; cursor: pointer; color: var(--text); }
+.brand-link {
+  position: fixed;
+  top: 14px;
+  left: 16px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+.brand-link:hover { opacity: 0.85; }
+.brand-logo { height: 40px; width: auto; display: block; }
+
+.topbar { border-bottom: 1px solid var(--border); background: #fff; padding-left: 176px; }
+.topbar-inner { max-width: 1080px; margin: 0 auto; padding: 10px 12px; display: flex; justify-content: flex-end; align-items: center; }
 .nav { display: flex; gap: 16px; align-items: center; }
 .nav a { color: var(--text-dim); font-size: 14px; }
-.nav a.router-link-active { color: var(--primary); }
+.nav a.router-link-active { color: var(--text); font-weight: 600; }
 .who { color: var(--text-dim); font-size: 13px; }
 .btn-sm { padding: 6px 12px; font-size: 13px; }
 .foot { text-align: center; padding: 18px; color: var(--text-dim); font-size: 12px; border-top: 1px solid var(--border); background: #fff; }
+
+@media (max-width: 720px) {
+  .topbar { padding-left: 0; }
+  .topbar-inner { justify-content: center; }
+  .brand-logo { height: 36px; }
+}
 </style>

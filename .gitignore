@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-admin/
 server/data/*.db
 server/data/*.db-journal
 server/data/*.db-wal
@@ -8,7 +9,10 @@ server/data/*.db-shm
 .env.local
 .DS_Store
 *.log
+*.err
 run.log
 server_out.log
 server_err.log
+build_err.txt
+build_out.txt
 .vite/

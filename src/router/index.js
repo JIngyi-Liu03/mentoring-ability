@@ -17,7 +17,8 @@ const routes = [
   },
   { path: '/intro', name: 'intro', component: () => import('../views/IntroView.vue') },
   { path: '/assessment', name: 'assessment', component: () => import('../views/AssessmentView.vue') },
-  { path: '/result', name: 'result', component: () => import('../views/ResultView.vue') },
+  { path: '/thanks', name: 'thanks', component: () => import('../views/ThankYouView.vue') },
+  { path: '/result/:id?', name: 'result', component: () => import('../views/ResultView.vue') },
   { path: '/admin', name: 'admin', component: () => import('../views/AdminView.vue') },
   { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]

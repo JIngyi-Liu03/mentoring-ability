@@ -1,9 +1,12 @@
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAssessmentStore } from '../stores/assessment.js'
+import { api } from '../api/client.js'
 import { dimensions } from '../../shared/dimensions.js'
 import { questions } from '../../shared/questions.js'
 import { levels } from '../../shared/levels.js'
+import { getLevel } from '../../shared/levels.js'
 
 const router = useRouter()
 const store = useAssessmentStore()
@@ -12,9 +15,41 @@ const totalQuestions = questions.length
 const totalDims = dimensions.length
 
 function start() {
-  store.resetAnswers()
-  router.push('/assessment')
+  try {
+    store.resetAnswers()
+    router.push('/assessment')
+  } catch (e) {
+    console.error('start failed:', e)
+    router.push('/assessment')
+  }
 }
+
+// 历史测试记录
+const history = ref([])
+const histLoading = ref(false)
+const histError = ref('')
+const fmt = (n) => (n == null ? '0.00' : Number(n).toFixed(2))
+const levelOf = (overall) => { const l = getLevel(overall); return `L${l.level} · ${l.name}` }
+function fmtTime(s) {
+  if (!s) return ''
+  const d = new Date(s.replace(' ', 'T') + 'Z')
+  if (isNaN(d.getTime())) return s
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+}
+function openResult(id) { router.push('/result/' + id) }
+
+onMounted(async () => {
+  histLoading.value = true
+  try {
+    const { results } = await api.get('/assessment/history')
+    history.value = results || []
+  } catch (e) {
+    histError.value = e.message || '加载失败'
+  } finally {
+    histLoading.value = false
+  }
+})
 </script>
 
 <template>
@@ -28,7 +63,7 @@ function start() {
         定位优势与短板，并获得可立即落地的提升建议。
       </p>
       <div class="cta-row">
-        <button class="btn btn-primary" @click="start">免费开始测评 →</button>
+        <button class="btn btn-primary" @click="start">免费开始测评</button>
         <span class="est muted">约 8–12 分钟 · 无需付费 · 即时出报告</span>
       </div>
     </section>
@@ -44,11 +79,6 @@ function start() {
         <div class="v-icon">🧩</div>
         <h3>12 维度全覆盖</h3>
         <p>从关系建立、倾听理解到边界伦理、持续精进，覆盖导师辅导的关键能力域。</p>
-      </div>
-      <div class="value">
-        <div class="v-icon">📈</div>
-        <h3>拿到行动建议</h3>
-        <p>每个维度附低 / 中 / 高三档改进建议，测评完即可对照执行，而非只看分数。</p>
       </div>
     </section>
 
@@ -108,8 +138,28 @@ function start() {
       </ul>
     </section>
 
+    <!-- 历史测试记录 -->
+    <section class="card block history">
+      <div class="block-head">
+        <h2>历史测试记录</h2>
+        <span class="muted">共 {{ history.length }} 次测评</span>
+      </div>
+      <div v-if="histLoading" class="muted center">加载中…</div>
+      <div v-else-if="histError" class="muted center">{{ histError }}</div>
+      <ul v-else-if="history.length" class="hist-list">
+        <li v-for="r in history" :key="r.id" class="hist-item" @click="openResult(r.id)">
+          <div class="hist-main">
+            <div class="hist-date">{{ fmtTime(r.created_at) }}</div>
+            <div class="hist-sub muted">总分 {{ fmt(r.overall) }} · {{ levelOf(r.overall) }}</div>
+          </div>
+          <div class="hist-arrow"></div>
+        </li>
+      </ul>
+      <p v-else class="muted center">还没有测评记录，点击上方按钮开始第一次测评吧。</p>
+    </section>
+
     <div class="bottom-cta">
-      <button class="btn btn-primary btn-block" @click="start">开始我的测评 →</button>
+      <button class="btn btn-primary btn-block" @click="start">开始我的测评</button>
     </div>
   </div>
 </template>
@@ -117,13 +167,13 @@ function start() {
 <style scoped>
 .intro { max-width: 1080px; margin: 0 auto; }
 .hero { text-align: center; padding: 28px 20px; }
-.badge { display: inline-block; font-size: 13px; font-weight: 700; color: var(--primary); background: rgba(99,102,241,0.10); padding: 5px 14px; border-radius: 999px; margin-bottom: 14px; }
+.badge { display: inline-block; font-size: 13px; font-weight: 700; color: var(--primary); background: var(--bg-soft); padding: 5px 14px; border-radius: 999px; margin-bottom: 14px; border: 1px solid var(--border); }
 .hero h1 { font-size: 32px; margin: 0 0 12px; color: var(--text); }
 .lead { color: var(--text-dim); line-height: 1.8; max-width: 640px; margin: 0 auto; font-size: 16px; }
 .cta-row { margin-top: 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .est { font-size: 13px; }
 
-.values { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 26px 0; }
+.values { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 26px 0; }
 .value { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); }
 .v-icon { font-size: 28px; }
 .value h3 { margin: 10px 0 6px; font-size: 17px; }
@@ -150,6 +200,19 @@ function start() {
 .note b { color: var(--text); }
 
 .bottom-cta { margin: 30px 0 10px; }
+
+.history { padding: 22px 20px; }
+.hist-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.hist-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px;
+  background: #fff; cursor: pointer; transition: border-color .15s, box-shadow .15s;
+}
+.hist-item:hover { border-color: var(--primary); }
+.hist-date { font-size: 15px; font-weight: 600; color: var(--text); }
+.hist-sub { font-size: 13px; margin-top: 2px; }
+.hist-arrow { font-size: 24px; color: var(--text-dim); line-height: 1; }
+.center { text-align: center; }
 
 @media (max-width: 720px) {
   .values, .levels { grid-template-columns: 1fr; }

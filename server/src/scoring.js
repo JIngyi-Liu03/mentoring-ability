@@ -24,15 +24,20 @@ export function computeScores(answers) {
   }
 
   const dimensionScores = dimensions.map(d => {
-    const avg = counts[d.id] ? sums[d.id] / counts[d.id] : 0
+    const sum = sums[d.id]
+    const count = counts[d.id]
+    const avg = count ? sum / count : 0
     const level = getLevel(avg)
-    return { id: d.id, name: d.name, short: d.short, avg: round(avg), level: level.level, levelName: level.name }
+    return {
+      id: d.id, name: d.name, short: d.short,
+      sum, count, avg: round(avg),
+      level: level.level, levelName: level.name
+    }
   })
 
-  const answered = dimensionScores.filter(s => s.avg > 0)
-  const overall = answered.length
-    ? answered.reduce((a, s) => a + s.avg, 0) / answered.length
-    : 0
+  const totalSum = Object.values(sums).reduce((a, b) => a + b, 0)
+  const totalCount = Object.values(counts).reduce((a, b) => a + b, 0)
+  const overall = totalCount ? totalSum / totalCount : 0
   const overallLevel = getLevel(overall)
 
   return {
