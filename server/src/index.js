@@ -45,15 +45,16 @@ function attachStatic(app, dir) {
 }
 
 // 3001：用户端（测评 / 结果 / API）
+// 显式绑定 0.0.0.0，确保公网 IPv4 与本地回环都能命中同一进程（避免 IPv4/IPv6 双栈导致的“双进程”假象）
 const userApp = buildApiApp()
 attachStatic(userApp, path.resolve(__dirname, '..', '..', 'dist'))
-userApp.listen(PORT, () => {
-  console.log(`[server] 用户端已启动: http://localhost:${PORT}`)
+userApp.listen(PORT, '0.0.0.0', () => {
+  console.log(`[server] 用户端已启动: http://0.0.0.0:${PORT}`)
 })
 
 // 3002：后台管理端（管理看板 / API）
 const adminApp = buildApiApp()
 attachStatic(adminApp, path.resolve(__dirname, '..', '..', 'dist-admin'))
-adminApp.listen(ADMIN_PORT, () => {
-  console.log(`[server] 后台端已启动: http://localhost:${ADMIN_PORT}`)
+adminApp.listen(ADMIN_PORT, '0.0.0.0', () => {
+  console.log(`[server] 后台端已启动: http://0.0.0.0:${ADMIN_PORT}`)
 })
