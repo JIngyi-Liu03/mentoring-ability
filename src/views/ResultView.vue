@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAssessmentStore } from '../stores/assessment.js'
 import { api } from '../api/client.js'
 import { levels } from '../../shared/levels.js'
-import * as echarts from 'echarts'
+import RadarChart from '../components/RadarChart.vue'
 
 // ---- 等级配色：与 shared/levels.js 一致（商标双色调） ----
 // 等级 1-3 青蓝深浅；等级 4（最高）橙色强调
@@ -26,8 +26,6 @@ const store = useAssessmentStore()
 const result = ref(null)
 const loading = ref(true)
 const barsReady = ref(false)
-const radarRef = ref(null)
-let radarChart = null
 
 const dimScores = computed(() => {
   if (!result.value || !result.value.dimensionScores) return []
@@ -51,6 +49,16 @@ const currentLevelColor = computed(() =>
   levelColor(result.value?.overallLevel ?? 1)
 )
 
+// 雷达图数据（ECharts 参数化组件）
+const radarIndicators = computed(() =>
+  dimScores.value.map(d => ({ name: d.name, max: 5 }))
+)
+const radarValues = computed(() =>
+  dimScores.value.map(d => d.avg)
+)
+const radarColor = computed(() => currentLevelColor.value.main)
+const radarFill = computed(() => currentLevelColor.value.fill)
+
 function pct(avg) {
   return Math.round((avg / maxScore.value) * 100)
 }
@@ -72,51 +80,12 @@ function normalizeResult(data) {
   }
 }
 
-function initRadar() {
-  if (!radarRef.value || !result.value || !dimScores.value.length) return
-  if (radarChart) radarChart.dispose()
-
-  radarChart = echarts.init(radarRef.value)
-  const names = dimScores.value.map(d => d.name)
-  const values = dimScores.value.map(d => d.avg)
-  const lc = currentLevelColor.value
-
-  radarChart.setOption({
-    color: [lc.main],
-    radar: {
-      center: ['50%', '52%'],
-      radius: '68%',
-      indicator: names.map(name => ({ name, max: 5 })),
-      axisName: { color: '#0f172a', fontSize: 13, borderRadius: 3, padding: [3, 5] },
-      shape: 'polygon',
-      splitNumber: 5,
-      splitArea: {
-        areaStyle: {
-          color: ['#ffffff', '#f8fafc']
-        }
-      },
-      splitLine: { lineStyle: { color: '#9ca3af', width: 0.5 } },
-      axisLine: { lineStyle: { color: '#9ca3af', width: 0.5 } }
-    },
-    series: [{
-      type: 'radar',
-      data: [{ value: values, name: '能力得分' }],
-      symbol: 'circle',
-      symbolSize: 5,
-      lineStyle: { color: lc.main, width: 2 },
-      areaStyle: { color: lc.fill },
-      itemStyle: { color: lc.deep, borderColor: lc.main, borderWidth: 1.5 }
-    }]
-  })
-}
-
 async function loadResult() {
   if (store.lastResult) {
     result.value = normalizeResult(store.lastResult)
     loading.value = false
     await nextTick()
     barsReady.value = true
-    initRadar()
   } else {
     loading.value = true
     barsReady.value = false
@@ -145,26 +114,18 @@ async function loadResult() {
     loading.value = false
     setTimeout(() => { barsReady.value = true }, 150)
     await nextTick()
-    initRadar()
   }
-}
-
-function handleResize() {
-  radarChart?.resize()
 }
 
 onMounted(() => {
   loadResult()
-  window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-  radarChart?.dispose()
+  // 雷达图由 RadarChart 组件自行销毁
 })
 
 watch(() => route.params.id, loadResult)
-watch(dimScores, () => { nextTick(initRadar) }, { deep: true })
 </script>
 
 <template>
@@ -194,10 +155,19 @@ watch(dimScores, () => { nextTick(initRadar) }, { deep: true })
       <p class="hero-desc">{{ currentLevel?.desc || '' }}</p>
     </div>
 
-    <!-- 雷达图 -->
+    <!-- 雷达图（复用参数化组件） -->
     <div class="chart-card">
       <h3 class="chart-title">能力维度雷达图</h3>
-      <div ref="radarRef" class="radar-box"></div>
+      <RadarChart
+        :indicators="radarIndicators"
+        :values="radarValues"
+        :color="radarColor"
+        :fill="radarFill"
+        shape="polygon"
+        radius="68%"
+        axis-color="#0f172a"
+        height="420px"
+      />
     </div>
 
     <!-- 各维度横向柱状图 -->
@@ -292,9 +262,6 @@ watch(dimScores, () => { nextTick(initRadar) }, { deep: true })
   color: var(--text, #1f2433); text-align: center;
 }
 
-/* ===== 雷达图 ===== */
-.radar-box { width: 100%; height: 420px; }
-
 /* ===== 底部操作 ===== */
 .actions { display: flex; justify-content: center; gap: 12px; margin-top: 4px; }
 
@@ -303,6 +270,5 @@ watch(dimScores, () => { nextTick(initRadar) }, { deep: true })
   .chart-label { width: 60px; font-size: 12px; }
   .hero-card { padding: 28px 20px; }
   .hero-score { font-size: 48px; }
-  .radar-box { height: 320px; }
 }
 </style>

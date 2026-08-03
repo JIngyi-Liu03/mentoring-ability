@@ -1,5 +1,11 @@
-// 腾讯云短信发送封装（仅用于发送验证码）。
-// 凭证使用 .env 中的子用户 SecretId/SecretKey（仅 sms 权限）。
+// ============================================================
+// server/src/services/sms.service.js —— 腾讯云短信发送服务
+//
+// 职责：
+//   - 发送短信验证码
+//   - 腾讯云错误码 → 中文提示翻译
+// ============================================================
+
 import tencentcloud from 'tencentcloud-sdk-nodejs-sms'
 
 const SmsClient = tencentcloud.sms.v20210111.Client
@@ -58,5 +64,3 @@ export async function sendSmsCode(phone, code) {
   }
   return res
 }
-
-export default { sendSmsCode }

@@ -30,7 +30,7 @@ function next() {
 }
 async function submit() {
     await store.submit()
-    router.push('/result')
+    router.push('/completion')
 }
 
 // 选中选项后自动进入下一题（最后一题不自动提交，避免误交）

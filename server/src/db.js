@@ -15,6 +15,8 @@ fs.mkdirSync(path.dirname(dbPath), { recursive: true })
 const db = new DatabaseSync(dbPath)
 db.exec('PRAGMA journal_mode = WAL;')
 db.exec('PRAGMA foreign_keys = ON;')
+// 写锁等待超时（毫秒）：避免并发写入时同步 API 长时间阻塞导致整个进程“假死”不响应
+db.exec('PRAGMA busy_timeout = 5000;')
 
 // 已存在的库可能缺少 email 列，安全补列（列已存在时会抛错，忽略即可）
 try {
@@ -58,14 +60,6 @@ db.exec(`
     token TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL,
     expires_at TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS password_resets (
-    token TEXT PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    expires_at TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
 

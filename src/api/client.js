@@ -1,12 +1,19 @@
-// 轻量 API 客户端：自动附带 token，统一处理错误。
-import { useUserStore } from '../stores/assessment.js'
+// ============================================================
+// src/api/client.js —— 轻量 API 客户端
+//
+// 职责：
+//   - 自动附带 token（来自 utils/token.js，不再依赖 store，避免循环依赖）
+//   - 统一处理错误，返回 JSON
+// ============================================================
+
+import { getToken } from '../utils/token.js'
 
 const BASE = '/api'
 
 async function request(method, url, body) {
-  const user = useUserStore()
   const headers = { 'Content-Type': 'application/json' }
-  if (user.token) headers.Authorization = `Bearer ${user.token}`
+  const token = getToken()
+  if (token) headers.Authorization = `Bearer ${token}`
 
   const res = await fetch(BASE + url, {
     method,

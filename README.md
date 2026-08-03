@@ -23,16 +23,20 @@ mentor-ability001/
 ├── server/                 # 后端（Express + SQLite）
 │   ├── package.json
 │   └── src/
-│       ├── index.js        # 入口
+│       ├── index.js        # 入口，托管 dist/user（用户端）与 dist/admin（管理端）
 │       ├── db.js           # 建库、建表、种子管理员
-│       ├── scoring.js      # 计分逻辑
 │       ├── crypto-hash.js  # 密码哈希（Node 内置 scrypt）
-│       ├── middleware/auth.js
-│       └── routes/         # auth / meta / assessment / admin
+│       ├── middleware/auth.js   # 鉴权中间件
+│       ├── routes/         # 【API 接口层】 auth / meta / assessment / admin
+│       ├── services/       # 【业务逻辑层】 user / scoring / sms
+│       └── repositories/   # 【数据访问层】 user / session / smsCode / result
 └── src/                    # 前端
-    ├── main.js / App.vue / router / stores / api / styles
-    ├── components/         # QuestionCard / StepProgress / RadarChart / ...
-    └── views/              # Login / Intro / Assessment / Result / Admin
+    ├── main.js / App.vue / router / styles
+    ├── views/              # 【展示层】 auth/(登录·注册·找回) / completion / Assessment / Result
+    ├── components/         # QuestionCard / StepProgress / RadarChart
+    ├── stores/             # assessment / user（Pinia）
+    ├── api/                # 【通信层】 client（统一封装 fetch + token）
+    └── utils/              # token / validate / format（通用工具）
 ```
 
 ## 本地开发

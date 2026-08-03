@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '../stores/assessment.js'
+import { useUserStore } from '../stores/user.js'
 import AdminLoginView from './views/AdminLoginView.vue'
 import AdminView from '../views/AdminView.vue'
 

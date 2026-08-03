@@ -1,7 +1,13 @@
-// 计分逻辑：由 answers（{ questionId: 1-5 }）算出各维度平均分、总平均分与成熟度等级。
-import { dimensions } from '../../shared/dimensions.js'
-import { questions } from '../../shared/questions.js'
-import { getLevel } from '../../shared/levels.js'
+// ============================================================
+// server/src/services/scoring.service.js —— 测评计分服务
+//
+// 职责：由 answers（{ questionId: 1-5 }）算出各维度平均分、
+//       总平均分与成熟度等级。
+// ============================================================
+
+import { dimensions } from '../../../shared/dimensions.js'
+import { questions } from '../../../shared/questions.js'
+import { getLevel } from '../../../shared/levels.js'
 
 // 返回 { overall, overallLevel, dimensionScores:[{id,name,avg,level}] }
 export function computeScores(answers) {

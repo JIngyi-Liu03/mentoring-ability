@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useUserStore } from '../../stores/assessment.js'
+import { useUserStore } from '../../stores/user.js'
 import { api } from '../../api/client.js'
 import logo from '../../assets/logo.webp'
 

@@ -1,23 +1,17 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { useUserStore } from '../stores/assessment.js'
+import { useUserStore } from '../stores/user.js'
 
 const routes = [
   { path: '/', redirect: '/login' },
   {
     path: '/login',
     name: 'login',
-    component: () => import('../views/LoginView.vue'),
-    meta: { public: true }
-  },
-  {
-    path: '/forgot',
-    name: 'forgot',
-    component: () => import('../views/ForgotPasswordView.vue'),
+    component: () => import('../views/auth/LoginView.vue'),
     meta: { public: true }
   },
   { path: '/intro', name: 'intro', component: () => import('../views/IntroView.vue') },
   { path: '/assessment', name: 'assessment', component: () => import('../views/AssessmentView.vue') },
-  { path: '/thanks', name: 'thanks', component: () => import('../views/ThankYouView.vue') },
+  { path: '/completion', name: 'completion', component: () => import('../views/completion/CompletionView.vue') },
   { path: '/result/:id?', name: 'result', component: () => import('../views/ResultView.vue') },
   { path: '/admin', name: 'admin', component: () => import('../views/AdminView.vue') },
   { path: '/:pathMatch(.*)*', redirect: '/login' }

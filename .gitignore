@@ -1,12 +1,13 @@
 node_modules/
 dist/
-dist-admin/
 server/data/*.db
 server/data/*.db-journal
 server/data/*.db-wal
 server/data/*.db-shm
 .env
 .env.local
+# 本地密钥文件（含 ADMIN_PASSWORD 等），绝不提交仓库
+deploy/secrets.env
 .DS_Store
 *.log
 *.err
@@ -16,3 +17,4 @@ server_err.log
 build_err.txt
 build_out.txt
 .vite/
+logs/

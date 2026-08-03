@@ -1,7 +1,11 @@
+// ============================================================
+// server/src/routes/assessment.js —— 测评路由（薄层）
+// ============================================================
+
 import { Router } from 'express'
-import db from '../db.js'
 import { requireAuth } from '../middleware/auth.js'
-import { computeScores } from '../scoring.js'
+import { computeScores } from '../services/scoring.service.js'
+import * as resultRepo from '../repositories/result.repo.js'
 
 const router = Router()
 
@@ -12,30 +16,24 @@ router.post('/submit', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'answers 字段缺失或格式错误' })
   }
   const scores = computeScores(answers)
-  const info = db.prepare(
-    `INSERT INTO results (user_id, overall, overall_level, dimension_scores, answers, created_at)
-     VALUES (?, ?, ?, ?, ?, datetime('now'))`
-  ).run(
-    req.user.id,
-    scores.overall,
-    scores.overallLevel,
-    JSON.stringify(scores.dimensionScores),
-    JSON.stringify(answers)
-  )
-  res.json({ id: info.lastInsertRowid, ...scores })
+  const id = resultRepo.insert({
+    userId: req.user.id,
+    overall: scores.overall,
+    overallLevel: scores.overallLevel,
+    dimensionScores: scores.dimensionScores,
+    answers
+  })
+  res.json({ id, ...scores })
 })
 
 // 当前用户的历史测评
 router.get('/history', requireAuth, (req, res) => {
-  const rows = db.prepare(
-    'SELECT id, overall, overall_level, created_at FROM results WHERE user_id = ? ORDER BY created_at DESC'
-  ).all(req.user.id)
-  res.json({ results: rows })
+  res.json({ results: resultRepo.listByUser(req.user.id) })
 })
 
 // 查看某次测评详情（仅本人）
 router.get('/:id', requireAuth, (req, res) => {
-  const row = db.prepare('SELECT * FROM results WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id)
+  const row = resultRepo.findByIdAndUser(req.params.id, req.user.id)
   if (!row) return res.status(404).json({ error: '测评记录不存在' })
   res.json({
     id: row.id,

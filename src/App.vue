@@ -1,5 +1,5 @@
 <script setup>
-import { useUserStore } from './stores/assessment.js'
+import { useUserStore } from './stores/user.js'
 import { useRouter, useRoute } from 'vue-router'
 import { computed } from 'vue'
 import logo from './assets/logo.webp'

@@ -3,8 +3,8 @@
 # 导师辅导能力成熟度自评 —— 服务器端一键部署脚本
 #
 # 在目标 Ubuntu 服务器上以 root（或用 sudo）执行本脚本即可完成：
-#   git 拉取代码 → 装依赖 → 构建 dist(用户端) 与 dist-admin(后台端)
-#   → 生成生产 .env（自动随机密钥）
+#   git 拉取代码 → 装依赖 → 构建 dist/user(用户端) 与 dist/admin(后台端)
+#   → 生成生产 .env（AUTH_SECRET 随机；管理员密码不进仓库，仅来自环境变量/本地文件）
 #   → 建独立低权限账户 → 注册 systemd 服务 → 放行 3001/3002 → 健康检查
 #
 # 与“职场基因检测”旧站点的隔离：
@@ -60,38 +60,42 @@ else
 fi
 cd "$INSTALL_DIR"
 
-echo "==> [3/9] 安装依赖并构建前端（用户端 dist + 后台端 dist-admin）"
+echo "==> [3/9] 安装依赖并构建前端（用户端 dist/user + 后台端 dist/admin）"
 npm install
 npm --prefix server install
 npm run build:all
-echo "    dist 构建完成：$(ls dist | head)"
-echo "    dist-admin 构建完成：$(ls dist-admin | head)"
+echo "    dist/user 构建完成：$(ls dist/user | head)"
+echo "    dist/admin 构建完成：$(ls dist/admin | head)"
 
-echo "==> [4/9] 生成生产 .env（自动随机安全密钥）"
-# 如果已有 .env，先备份其中的短信配置，避免重新部署时丢失
-SMS_BACKUP=""
+echo "==> [4/9] 生成/保留生产 .env（密码不写入仓库）"
+# 关键安全原则：管理员密码绝不进入 git 仓库。
+#   - 重新部署时若已存在 .env，则【整体保留】，不覆盖（密码/短信配置都不会丢、不会被随机重置）
+#   - 首次部署时密码来源（均不进仓库）：
+#       1) 环境变量 ADMIN_PASSWORD（推荐： ADMIN_PASSWORD='你的密码' sudo bash setup-server.sh）
+#       2) 本地 gitignored 文件 deploy/secrets.env（写一行 ADMIN_PASSWORD=你的密码，需自行加入 .gitignore）
+#       3) 以上皆无才随机生成并打印一次
 if [ -f .env ]; then
-  SMS_BACKUP=$(grep -E '^(TENCENT_SECRET_ID|TENCENT_SECRET_KEY|SMS_SDK_APP_ID|SMS_SIGN_NAME|SMS_TEMPLATE_ID|SMS_CODE_TTL|SMS_SEND_INTERVAL)=' .env 2>/dev/null || true)
+  echo "    检测到已存在 .env，整体保留现有配置（管理员密码不变），跳过覆盖"
+else
+  cp .env.production .env
+  AUTH_SECRET="$(openssl rand -hex 32)"
+  if [ -n "${ADMIN_PASSWORD:-}" ]; then
+    echo "    使用部署时传入的 ADMIN_PASSWORD 环境变量"
+  elif [ -f deploy/secrets.env ]; then
+    # shellcheck disable=SC1091
+    . deploy/secrets.env
+    echo "    使用本地 deploy/secrets.env 中的 ADMIN_PASSWORD"
+  else
+    ADMIN_PASSWORD="$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9' | head -c 16)"
+    echo "    ⚠️ 未提供固定密码，已随机生成管理员密码（仅此显示一次，请记好）"
+  fi
+  sed -i "s#__CHANGE_ME_auth_secret_generate_with_openssl_rand_hex_32__#${AUTH_SECRET}#" .env
+  sed -i "s#__CHANGE_ME_admin_password__#${ADMIN_PASSWORD}#" .env
+  echo "    管理员账号: admin / 密码: ${ADMIN_PASSWORD}"
+  echo "    （重装/重新部署时只要 .env 还在，密码就保持不变；改密才需传入 ADMIN_PASSWORD）"
 fi
-cp .env.production .env
-AUTH_SECRET="$(openssl rand -hex 32)"
-ADMIN_PASSWORD="$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9' | head -c 16)"
-# 替换模板占位符
-sed -i "s#__CHANGE_ME_auth_secret_generate_with_openssl_rand_hex_32__#${AUTH_SECRET}#" .env
-sed -i "s#__CHANGE_ME_admin_password__#${ADMIN_PASSWORD}#" .env
-# 如果有之前保存的短信配置，追加到 .env 末尾（覆盖模板中的占位符行）
-if [ -n "$SMS_BACKUP" ]; then
-  echo "$SMS_BACKUP" > /tmp/sms_env_$$
-  while IFS= read -r line; do
-    key="${line%%=*}"
-    sed -i "/^${key}=/c\\${line}" .env
-  done < /tmp/sms_env_$$
-  rm -f /tmp/sms_env_$$
-  echo "    已从旧 .env 恢复短信配置"
-fi
-echo "    ⚠️  请妥善保存以下管理员凭据（仅此显示一次）："
-echo "    管理员账号: admin"
-echo "    管理员密码: ${ADMIN_PASSWORD}"
+# .env 含密钥，锁死权限：仅属主可读写（服务以 mentor 用户运行，可正常读取）
+chmod 600 .env
 echo "    ⚠️  如短信配置未填写，请手动编辑 .env 补充 TENCENT_SECRET_ID 等"
 
 echo "==> [5/9] 设置启动脚本权限"
@@ -128,7 +132,7 @@ if echo "$HEALTH" | grep -q '"ok":true'; then
   echo "✅ 部署完成！"
   echo "   用户端（测评）： http://<服务器公网IP>:3001/"
   echo "   后台端（管理）： http://<服务器公网IP>:3002/"
-  echo "   管理后台登录：账号 admin / 上面生成的密码"
+  echo "   管理后台登录：账号 admin / 上面设置的密码（重部署保持不变）"
 else
   echo "⚠️ 健康检查未通过，请排查："
   echo "   journalctl -u mentor-ability -n 100"

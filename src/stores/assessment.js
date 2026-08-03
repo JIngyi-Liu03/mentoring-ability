@@ -1,39 +1,16 @@
+// ============================================================
+// src/stores/assessment.js —— 答题进度 Store（useAssessmentStore）
+//
+// 职责：
+//   - 答题进度与答案（单题平铺模式）
+//   - 提交测评并保存最近一次结果
+//
+// 注意：用户登录态 useUserStore 已拆分到 ./user.js
+// ============================================================
+
 import { defineStore } from 'pinia'
 import { questions } from '../../shared/questions.js'
 import { api } from '../api/client.js'
-
-const TOKEN_KEY = 'mentor_token'
-const USER_KEY = 'mentor_user'
-
-function load(key) {
-  try { return JSON.parse(localStorage.getItem(key)) } catch { return null }
-}
-
-// 用户与登录态
-export const useUserStore = defineStore('user', {
-  state: () => ({
-    token: localStorage.getItem(TOKEN_KEY) || '',
-    user: load(USER_KEY)
-  }),
-  getters: {
-    isLoggedIn: (s) => !!s.token && !!s.user,
-    isAdmin: (s) => s.user?.role === 'admin'
-  },
-  actions: {
-    setSession(token, user) {
-      this.token = token
-      this.user = user
-      localStorage.setItem(TOKEN_KEY, token)
-      localStorage.setItem(USER_KEY, JSON.stringify(user))
-    },
-    logout() {
-      this.token = ''
-      this.user = null
-      localStorage.removeItem(TOKEN_KEY)
-      localStorage.removeItem(USER_KEY)
-    }
-  }
-})
 
 // 答题进度与结果（单题平铺模式）
 export const useAssessmentStore = defineStore('assessment', {
