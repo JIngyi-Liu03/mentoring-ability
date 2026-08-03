@@ -291,10 +291,10 @@ onUnmounted(() => {
 .login-wrap { min-height: 80vh; display: grid; place-items: center; }
 .login-card { width: 100%; max-width: 420px; }
 /* 用品牌 LOGO 取代 emoji，保持足够大且居中 */
-.logo { height: 160px; width: auto; display: block; margin: 0 auto 14px; }
+.logo { height: 110px; width: auto; display: block; margin: 0 auto 14px; }
 
 @media (max-width: 720px) {
-  .logo { height: 110px; }
+  .logo { height: 80px; }
 }
 
 /* 模式标题 */

@@ -76,10 +76,10 @@ async function doLogin() {
 .login-wrap { min-height: 80vh; display: grid; place-items: center; background: #f5f6fa; }
 .login-card { width: 100%; max-width: 400px; }
 /* 用品牌 LOGO 取代 emoji，保持足够大且居中 */
-.logo { height: 120px; width: auto; display: block; margin: 0 auto 14px; }
+.logo { height: 90px; width: auto; display: block; margin: 0 auto 14px; }
 
 @media (max-width: 720px) {
-  .logo { height: 90px; }
+  .logo { height: 70px; }
 }
 
 .pwd-row { display: flex; align-items: center; }
