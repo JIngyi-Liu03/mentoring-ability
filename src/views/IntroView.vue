@@ -71,22 +71,18 @@ onMounted(async () => {
     <!-- 价值主张 -->
     <section class="values">
       <div class="value">
-        <div class="v-icon">📐</div>
         <h3>专业标准有依据</h3>
         <p>基于MentoringCo盟珂40余年导师辅导实践经验，严格对标EMCC八大维度（理解自我、管理契约、建立关系、促进洞察与学习、结果与行动导向、运用模型与工具、评估）与IPMA九项核心能力（自我认知、辅导框架构建、关系联盟建立、资源激活、技术工具运用、知识萃取与传承、沟通与推广、评估反思、全局系统思维）。</p>
       </div>
       <div class="value">
-        <div class="v-icon">🧩</div>
         <h3>12维度全覆盖</h3>
         <p>整合两大框架核心要素，提炼为12项关键能力域：自我认知与自我发展、目标设定、关系建立、教练技术、资源激活、知识传承、技术应用、成果检验、沟通推广、评估反思、系统思维、职业道德，全面覆盖导师辅导的专业实践场景。</p>
       </div>
       <div class="value">
-        <div class="v-icon">⚖️</div>
         <h3>伦理品格可评估</h3>
         <p>深度融合《全球导师、教练与督导职业道德准则》与《IPMA职业道德与行为准则》，将诚信、尊重、责任、勇气等核心价值观转化为可评估的具体行为，使自评既衡量专业能力，亦观照职业品格。</p>
       </div>
       <div class="value">
-        <div class="v-icon">🎯</div>
         <h3>真实能级有判定</h3>
         <p>行为指标从基础级至大师级逐级递进，通过统一量表输出助理级/专业级/高级/大师级四档判定，将"凭感觉"的辅导水平转化为可衡量、可对照的清晰画像。</p>
       </div>
@@ -183,9 +179,8 @@ onMounted(async () => {
 .cta-row { margin-top: 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .est { font-size: 13px; }
 
-.values { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 26px 0; }
+.values { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 26px 0; }
 .value { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); }
-.v-icon { font-size: 28px; }
 .value h3 { margin: 10px 0 6px; font-size: 17px; }
 .value p { margin: 0; color: var(--text-dim); font-size: 14px; line-height: 1.65; }
 
