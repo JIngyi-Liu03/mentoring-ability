@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../stores/assessment.js'
 import { api } from '../api/client.js'
+import logo from '../assets/logo.webp'
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -168,7 +169,7 @@ onUnmounted(() => {
   <div class="login-wrap">
     <div class="card login-card">
       <div class="hero">
-        <div class="logo">🧭</div>
+        <img :src="logo" class="logo" alt="MentoringCo" />
         <h1>导师辅导能力成熟度自评</h1>
         <p>用一套成熟模型，看清你的辅导能力处在哪一能级，并获得可执行的提升建议。</p>
       </div>
@@ -289,7 +290,12 @@ onUnmounted(() => {
 <style scoped>
 .login-wrap { min-height: 80vh; display: grid; place-items: center; }
 .login-card { width: 100%; max-width: 420px; }
-.logo { font-size: 64px; line-height: 1; margin-bottom: 6px; }
+/* 用品牌 LOGO 取代 emoji，保持足够大且居中 */
+.logo { height: 160px; width: auto; display: block; margin: 0 auto 14px; }
+
+@media (max-width: 720px) {
+  .logo { height: 110px; }
+}
 
 /* 模式标题 */
 .mode-header { margin-bottom: 16px; }

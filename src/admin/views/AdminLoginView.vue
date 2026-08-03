@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../../stores/assessment.js'
 import { api } from '../../api/client.js'
+import logo from '../../assets/logo.webp'
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -39,7 +40,7 @@ async function doLogin() {
   <div class="login-wrap">
     <div class="card login-card">
       <div class="hero">
-        <div class="logo">🎓</div>
+        <img :src="logo" class="logo" alt="MentoringCo" />
         <h1>导师能力评估管理系统</h1>
         <p>管理人员专用后台</p>
       </div>
@@ -74,7 +75,12 @@ async function doLogin() {
 <style scoped>
 .login-wrap { min-height: 80vh; display: grid; place-items: center; background: #f5f6fa; }
 .login-card { width: 100%; max-width: 400px; }
-.logo { font-size: 40px; }
+/* 用品牌 LOGO 取代 emoji，保持足够大且居中 */
+.logo { height: 120px; width: auto; display: block; margin: 0 auto 14px; }
+
+@media (max-width: 720px) {
+  .logo { height: 90px; }
+}
 
 .pwd-row { display: flex; align-items: center; }
 .pwd-row input { flex: 1; }

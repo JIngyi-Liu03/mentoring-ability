@@ -10,6 +10,7 @@ const route = useRoute()
 
 const showNav = computed(() => user.isLoggedIn)
 const onLogin = computed(() => route.name === 'login')
+const hideBrand = computed(() => route.meta?.public)
 
 function goHome() {
   router.push(user.isAdmin ? '/admin' : '/intro')
@@ -22,8 +23,8 @@ function logout() {
 
 <template>
   <div class="app-shell">
-    <!-- 商标：始终在页面左上角（使用用户提供的原图） -->
-    <router-link to="/intro" class="brand-link" aria-label="返回首页">
+    <!-- 商标：始终在页面左上角（使用用户提供的原图），登录/忘记密码页隐藏 -->
+    <router-link v-if="!hideBrand" to="/intro" class="brand-link" aria-label="返回首页">
       <img :src="logo" class="brand-logo" alt="MentoringCo" />
     </router-link>
 

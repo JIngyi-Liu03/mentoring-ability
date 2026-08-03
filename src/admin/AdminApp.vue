@@ -1,10 +1,13 @@
 <script setup>
+import { computed } from 'vue'
 import { useUserStore } from '../stores/assessment.js'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import logo from '../assets/logo.webp'
 
 const user = useUserStore()
 const router = useRouter()
+const route = useRoute()
+const hideBrand = computed(() => route.name === 'login')
 
 function logout() {
   user.logout()
@@ -14,8 +17,8 @@ function logout() {
 
 <template>
   <div class="app-shell">
-    <!-- 商标：始终在页面左上角（使用用户提供的原图） -->
-    <div class="brand-link" aria-label="MentoringCo">
+    <!-- 商标：始终在页面左上角（使用用户提供的原图），登录页隐藏 -->
+    <div v-if="!hideBrand" class="brand-link" aria-label="MentoringCo">
       <img :src="logo" class="brand-logo" alt="MentoringCo" />
     </div>
 
