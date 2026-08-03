@@ -53,17 +53,18 @@ function logout() {
 <style scoped>
 .brand-link {
   position: fixed;
-  top: 14px;
-  left: 16px;
+  top: 18px;
+  left: 20px;
   z-index: 100;
   display: inline-flex;
   align-items: center;
   cursor: pointer;
 }
 .brand-link:hover { opacity: 0.85; }
-.brand-logo { height: 40px; width: auto; display: block; }
+/* 超大商标，方便老年人/视力不佳者清晰辨认 */
+.brand-logo { height: 200px; width: auto; display: block; }
 
-.topbar { border-bottom: 1px solid var(--border); background: #fff; padding-left: 176px; }
+.topbar { border-bottom: 1px solid var(--border); background: #fff; padding-left: 480px; }
 .topbar-inner { max-width: 1080px; margin: 0 auto; padding: 10px 12px; display: flex; justify-content: flex-end; align-items: center; }
 .nav { display: flex; gap: 16px; align-items: center; }
 .nav a { color: var(--text-dim); font-size: 14px; }
@@ -75,6 +76,7 @@ function logout() {
 @media (max-width: 720px) {
   .topbar { padding-left: 0; }
   .topbar-inner { justify-content: center; }
-  .brand-logo { height: 36px; }
+  .brand-link { top: 12px; left: 14px; }
+  .brand-logo { height: 140px; }
 }
 </style>

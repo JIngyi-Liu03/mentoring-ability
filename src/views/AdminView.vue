@@ -107,11 +107,10 @@ function levelName(l) {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>ID</th><th>用户</th><th>姓名</th><th>综合得分</th><th>等级</th><th>时间</th></tr>
+            <tr><th>用户</th><th>姓名</th><th>综合得分</th><th>等级</th><th>时间</th></tr>
           </thead>
           <tbody>
             <tr v-for="r in results" :key="r.id">
-              <td>#{{ r.id }}</td>
               <td>{{ r.username }}</td>
               <td>{{ r.name || '—' }}</td>
               <td>{{ r.overall }}</td>

@@ -289,7 +289,7 @@ onUnmounted(() => {
 <style scoped>
 .login-wrap { min-height: 80vh; display: grid; place-items: center; }
 .login-card { width: 100%; max-width: 420px; }
-.logo { font-size: 40px; }
+.logo { font-size: 64px; line-height: 1; margin-bottom: 6px; }
 
 /* 模式标题 */
 .mode-header { margin-bottom: 16px; }
