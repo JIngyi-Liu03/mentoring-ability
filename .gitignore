@@ -31,3 +31,7 @@ server/_tmp_*.txt
 server/_tmp_*.log
 *.png
 !deploy/**/*.png
+!public/**/*.png
+!src/admin/public/**/*.png
+# 顶栏品牌大图（src/assets/logo.webp 已经在仓库里），下面 favicon 是浏览器地址栏图标
+!src/assets/favicon.png
