@@ -23,7 +23,6 @@ function start() {
     router.push('/assessment')
   }
 }
-
 // 历史测试记录
 const history = ref([])
 const histLoading = ref(false)

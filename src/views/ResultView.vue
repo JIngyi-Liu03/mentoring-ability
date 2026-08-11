@@ -196,8 +196,11 @@ watch(() => route.params.id, loadResult)
       </div>
     </div>
 
-    <!-- 底部操作：退出回介绍页 -->
+    <!-- 底部操作：AI 深度解读 + 退出 -->
     <div class="actions">
+      <button class="btn btn-primary btn-ai" @click="router.push('/report/' + (route.params.id || ''))">
+        AI深度解读
+      </button>
       <button class="btn btn-outline" @click="router.push('/intro')">退出</button>
     </div>
   </div>
@@ -211,6 +214,7 @@ watch(() => route.params.id, loadResult)
 .btn { padding: 10px 22px; border-radius: 10px; font-size: 14px; cursor: pointer; border: none; }
 .btn-primary { background: var(--primary, #1c8a8b); color: #fff; }
 .btn-outline { background: transparent; border: 1px solid var(--border, #e5e7eb); color: var(--text, #333); }
+.btn-ai { background: linear-gradient(135deg, var(--primary, #1c8a8b), #3aa9aa); }
 .btn:hover { opacity: .85; }
 
 /* ===== 总览卡片 ===== */

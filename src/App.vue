@@ -10,7 +10,8 @@ const route = useRoute()
 
 const showNav = computed(() => user.isLoggedIn)
 const onLogin = computed(() => route.name === 'login')
-const hideBrand = computed(() => route.meta?.public)
+// 仅登录/注册/找回密码这类认证页隐藏左上角商标；首页等其他 public 页仍显示
+const hideBrand = computed(() => ['login', 'register', 'reset'].includes(route.name))
 
 function goHome() {
   router.push(user.isAdmin ? '/admin' : '/intro')

@@ -1,8 +1,8 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
 
 const routes = [
-  { path: '/', redirect: '/login' },
+  { path: '/', name: 'home', component: () => import('../views/HomeView.vue'), meta: { public: true } },
   {
     path: '/login',
     name: 'login',
@@ -13,12 +13,13 @@ const routes = [
   { path: '/assessment', name: 'assessment', component: () => import('../views/AssessmentView.vue') },
   { path: '/completion', name: 'completion', component: () => import('../views/completion/CompletionView.vue') },
   { path: '/result/:id?', name: 'result', component: () => import('../views/ResultView.vue') },
+  { path: '/report/:id?', name: 'report', component: () => import('../views/report/AiReportView.vue') },
   { path: '/admin', name: 'admin', component: () => import('../views/AdminView.vue') },
   { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes
 })
 

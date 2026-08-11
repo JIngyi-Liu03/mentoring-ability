@@ -4,40 +4,100 @@
 
 - 前端：**Vue 3 + Vite + Pinia + Vue Router + ECharts（雷达图）**
 - 后端：**Node.js (Express) + 内置 `node:sqlite`**（零原生编译依赖，需 Node ≥ 22.5）**
-- 能力模型：6 个维度 × 约 24 题，5 级成熟度（CMMI 风格）
+- 能力模型：**12 个维度 × 81 道李克特量表题（1–5 分），4 档成熟度等级（CMMI 风格）**
 - 附加：**管理看板**（团队整体成熟度、各维度均值、等级分布、用户与测评记录）
 
-## 目录结构
+> 本文档为总文档，已整合原 `ROPECT-Mentor001.md`（架构与代码详解）于此。
+
+## 目录结构与各文件职责
+
+### 顶层
+
+| 文件 / 目录 | 职责 |
+|---|---|
+| `package.json` | 前端依赖 + 一键脚本（`dev` 同时起前后端、`build:all` 构建用户端+后台端） |
+| `vite.config.js` | 用户端（测评端）Vite 配置：开发端口 5173，前端通过 proxy 把 `/api` 转发到后端 3001；`build.outDir: dist/user` |
+| `vite.admin.config.js` | 后台管理端独立 Vite 配置：`root: src/admin`，产物输出 `dist/admin`，由后端 3002 端口托管 |
+| `index.html` | 用户端 HTML 入口，`<script>` 加载 `src/main.js` |
+| `README.md` | 本文档（全栈项目说明总文档） |
+
+### `shared/` —— 前后端共用的数据模型（核心：改这里就能调整测评内容）
+
+| 文件 | 职责 |
+|---|---|
+| `dimensions.js` | 12 个能力维度定义（id / 名称 / 配色 / 描述）+ `dimensionMap` |
+| `questions.js` | 81 道自评题，每题归属某维度，5 级量表 |
+| `levels.js` | 4 档成熟度等级（分数区间 + 描述）+ `getLevel(score)` 映射函数 |
+| `suggestions.js` | 各维度按低/中/高三档的改进建议 + `getSuggestion(dimId, avg)` |
+
+> 后端 `scoring.service.js`、`meta` 路由、前端 `AssessmentView`/`ResultView` 都直接 `import` 这些文件，实现**前后端模型自动同步**。
+
+### `server/` —— 后端（Express + SQLite）
 
 ```
-mentor-ability001/
-├── package.json            # 前端依赖 + 一键启动脚本
-├── vite.config.js
-├── index.html
-├── .env                    # 后端配置（端口/管理员/密钥）
-├── shared/                 # 前后端共用的数据模型（维度/题目/等级/建议）
-│   ├── dimensions.js
-│   ├── questions.js
-│   ├── levels.js
-│   └── suggestions.js
-├── server/                 # 后端（Express + SQLite）
-│   ├── package.json
-│   └── src/
-│       ├── index.js        # 入口，托管 dist/user（用户端）与 dist/admin（管理端）
-│       ├── db.js           # 建库、建表、种子管理员
-│       ├── crypto-hash.js  # 密码哈希（Node 内置 scrypt）
-│       ├── middleware/auth.js   # 鉴权中间件
-│       ├── routes/         # 【API 接口层】 auth / meta / assessment / admin
-│       ├── services/       # 【业务逻辑层】 user / scoring / sms
-│       └── repositories/   # 【数据访问层】 user / session / smsCode / result
-└── src/                    # 前端
-    ├── main.js / App.vue / router / styles
-    ├── views/              # 【展示层】 auth/(登录·注册·找回) / completion / Assessment / Result
-    ├── components/         # QuestionCard / StepProgress / RadarChart
-    ├── stores/             # assessment / user（Pinia）
-    ├── api/                # 【通信层】 client（统一封装 fetch + token）
-    └── utils/              # token / validate / format（通用工具）
+server/
+├── package.json        # 后端依赖（express / cors / tencentcloud-sdk-nodejs-sms）
+├── start.sh            # 启动脚本：探测 Node 22/24 选择 node:sqlite 参数，读取根目录 .env
+├── src/
+│   ├── index.js        # 入口：建两个 app，分别监听 3001（用户端）/ 3002（后台端），托管 dist
+│   ├── db.js           # 建库建表（users/sessions/results/sms_codes）、WAL 配置、种子管理员
+│   ├── crypto-hash.js  # 密码哈希（scrypt + 随机 salt + 定时比较防时序攻击）
+│   ├── middleware/auth.js   # 鉴权中间件：createSession/destroySession + requireAuth/requireAdmin 守卫
+│   ├── routes/         # 路由层（薄层，只收参/校验/调服务）
+│   │   ├── auth.js     # 注册/登录/短信验证码/找回密码/登出/me
+│   │   ├── meta.js     # GET /api/meta 公开返回维度/题目/等级
+│   │   ├── assessment.js  # 提交测评计分、历史、详情
+│   │   └── admin.js    # 团队概览/用户列表/全部测评记录（需管理员）
+│   ├── services/       # 业务逻辑层
+│   │   ├── user.service.js  # 注册/登录/验证码发送与消费业务流程、手机号校验、限频
+│   │   ├── scoring.service.js  # 由 answers 计算各维度分/总分/等级
+│   │   └── sms.service.js   # 腾讯云短信发送 + 错误码→中文翻译
+│   └── repositories/   # 数据访问层（仅 SQL，无业务规则）
+│       ├── user.repo.js    # users 表 CRUD + 统计
+│       ├── result.repo.js  # results 表增查 + 管理聚合统计
+│       ├── session.repo.js # sessions 表
+│       └── smsCode.repo.js # sms_codes 表
+└── data/               # SQLite 文件目录（mentor.db，WAL 模式）
 ```
+
+**后端分层架构**（经典三层）：`routes`（薄）→ `services`（业务）→ `repositories`（数据）→ `db`。
+
+### `src/` —— 用户端前端（Vue 3）
+
+```
+src/
+├── main.js             # 应用入口：挂载 Pinia + Router
+├── App.vue             # 根组件
+├── router/index.js     # 用户端路由 + 全局守卫（未登录跳登录/非管理员禁入后台）
+├── api/client.js       # 统一 API 客户端：自动带 token、统一错误处理
+├── stores/             # Pinia 状态
+│   ├── user.js         # 登录态（token/user/role），isLoggedIn/isAdmin
+│   └── assessment.js   # 答题进度（81 题平铺）、提交测评
+├── utils/              # token.js(localStorage 读写) / validate.js / format.js
+├── views/              # 页面
+│   ├── IntroView.vue           # 测评引导页
+│   ├── AssessmentView.vue      # 答题页（单题平铺、自动翻页、进度条）
+│   ├── ResultView.vue          # 结果页（雷达图 + 等级 + 维度条 + 建议）
+│   ├── AdminView.vue           # 管理员入口（前端路由可进，真正后台在 src/admin）
+│   ├── auth/                   # 登录/注册/找回密码
+│   └── completion/            # 提交完成页
+├── components/         # QuestionCard / StepProgress / RadarChart(ECharts) / DimensionBar / SuggestionCard
+├── styles/             # 全局样式 main.css
+└── admin/              # 独立后台管理前端（用户端同源，但单独构建到 dist/admin）
+    ├── index.html / main.js / AdminApp.vue / router.js
+    └── views/          # AdminLoginView / AdminView（团队概览/各维度均值/等级分布/用户与记录）
+```
+
+### `deploy/` —— 运维部署脚本
+
+| 文件 | 职责 |
+|---|---|
+| `setup-server.sh` | 一键部署：拉代码→装依赖→构建→生成 `.env`(密码不进仓库)→建低权限账户→注册 systemd→放行端口→健康检查 |
+| `update.sh` | 日常更新：`git pull`→装依赖→构建→`systemctl restart`→健康检查 |
+| `mentor-ability.service` | systemd 单元：`Restart=always`、低权限 `mentor` 用户、`MemoryMax=768M`、日志交 journald |
+| `mentor-watchdog.sh` | 看门狗：每分钟探 `/api/health`，不通则重启（补足 systemd 仅在进程退出时重启的盲区） |
+| `fix-3002.sh` | 诊断/修复 3002 端口 502（修正 nginx 的 `proxy_pass` 指向 `127.0.0.1:3002`） |
+| `nginx-mentor.conf` | 可选的 Nginx 反代片段（独立 server 块，接域名/HTTPS 用，不改动旧站点配置） |
 
 ## 本地开发
 
@@ -187,3 +247,125 @@ cp /opt/mentor-ability/server/data/mentor.db /你的备份目录/mentor-$(date +
 
 所有题目、维度、成熟度等级与建议都集中在 `shared/` 目录，前后端自动同步，
 直接改这里即可调整测评模型，无需改动业务代码。
+
+---
+
+## 技术架构图
+
+```mermaid
+flowchart TB
+    subgraph Client["浏览器"]
+        U["用户端 Vue (5173 / dist/user / 3001)"]
+        A["后台端 Vue (dist/admin / 3002)"]
+    end
+    subgraph Server["Node 单进程 (Express)"]
+        R1["API 路由 /api/auth /meta /assessment /admin"]
+        SVC["Services: user / scoring / sms"]
+        REPO["Repositories: user / result / session / smsCode"]
+        MID["中间件 auth (token 守卫)"]
+    end
+    DB[("SQLite mentor.db\nWAL 模式")]
+    SMS["腾讯云短信"]
+
+    U -->|fetch+Bearer| R1
+    A -->|fetch+Bearer| R1
+    R1 --> MID --> SVC --> REPO --> DB
+    SVC -.发送验证码.-> SMS
+    U -.import.-> SH["shared/ 模型"]
+    SVC -.import.-> SH
+```
+
+## 关键数据流
+
+**1. 答题 → 出报告**
+`AssessmentView` 收集 81 题答案 → `assessment.store.submit()` 调 `POST /api/assessment/submit` → `scoring.service.computeScores()` 按维度求均值、映射等级 → `result.repo.insert()` 落库 → 返回结果 → `ResultView` 用 `RadarChart`(ECharts) + `DimensionBar` + `getSuggestion()` 渲染报告。
+
+**2. 注册/登录（短信验证码流程）**
+`POST /api/auth/sms/send` → `user.service.sendCode()`（场景校验+限频）→ `sms.service.sendSmsCode()` 调腾讯云 → 用户填码 → `POST /api/auth/sms/register` → `consumeCode()` 校验消费 → `user.repo.create()` 建用户 → `createSession()` 发 token。
+
+**3. 管理看板**
+`requireAdmin` 守卫 → `GET /api/admin/overview` → `user.repo`/`result.repo` 聚合（统计自动排除管理员自身）→ 返回团队均值/各维度均值/等级分布。
+
+## 安全与隔离设计要点
+
+- **密码安全**：`scrypt` 加盐哈希 + `timingSafeEqual` 防时序攻击
+- **会话**：token 存 `sessions` 表，7 天过期；中间件统一 `requireAuth`/`requireAdmin` 守卫
+- **无感恢复**：`index.js` 捕获未处理异常直接 `exit(1)`，由 systemd `Restart=always` + watchdog 拉起；SQLite WAL 保证崩溃可恢复
+- **与旧站点隔离**：独立目录 `/opt/mentor-ability`、独立 systemd 进程、独立 SQLite 文件、独立端口 3001/3002，**完全不碰旧 Docker 站点的任何配置/数据库**
+
+## 网站架构分层模型
+
+系统整体遵循「**分层 + 解耦 + 单一职责**」的经典架构原则，自顶向下五层：
+
+```
+前端（展示层）
+        ↓
+API 接口层（通信层）
+        ↓
+业务逻辑层（服务层）
+        ↓
+数据访问层
+        ↓
+数据库
+```
+
+各层只向下依赖、互不越权，改动某一层不影响其他层。本项目与五层模型的对应关系：
+
+| 分层 | 本项目的落地 |
+|---|---|
+| **前端（展示层）** | `src/`（Vue 3 组件 / 页面 / ECharts 图表）、`src/admin/`（后台管理前端） |
+| **API 接口层（通信层）** | `src/api/client.js`（统一带 token 的 fetch 客户端）；后端 `server/src/routes/*`（REST 端点，薄层只收参/校验/调服务） |
+| **业务逻辑层（服务层）** | `server/src/services/*`（`user` / `scoring` / `sms`），含注册登录流程、计分规则、短信发送 |
+| **数据访问层** | `server/src/repositories/*`（`user` / `result` / `session` / `smsCode`），仅写 SQL，不掺杂业务规则 |
+| **数据库** | `server/data/mentor.db`（SQLite，`node:sqlite`，WAL 模式） |
+
+> 跨层共享的「数据契约」放在 `shared/`（`dimensions` / `questions` / `levels` / `suggestions`），前后端都 `import`，保证模型一致、自动同步。
+
+## 部署流水线要点（AI 代执行视角与常见卡点）
+
+上面「部署到腾讯云」是逐条实操手册；本节补充**流水线总览、密钥区分与常见卡点**，便于自动化/代执行。
+
+### 总流程（7 步）
+
+```
+本地改代码 → git push 到 GitHub → SSH 到服务器 → git pull → npm install → npm run build:all → systemctl restart
+```
+
+核心前提：**AI 通过 IDE 插件直接在本机工作区读写文件、执行终端命令**（插件运行在你电脑上，由 IDE 授予权限，相当于你用鼠标手动编辑）。
+
+### 本地（Windows 机器，本机操作环境）
+
+1. **改代码**：修改工作区 `d:/app/code/code/mentor-ability001/` 下的文件（例如 `src/views/IntroView.vue` 改 2×2 布局、删 emoji）。
+2. **本地构建验证**：先跑 `npm run build`，确认前端能编译通过，避免把坏代码推上去。
+3. **提交并推送**：本机 `git add -A` → `git commit` → `git push origin main`。推送 GitHub 使用**本机 `id_ed25519` 密钥免密**。
+
+### 服务器（从本机 SSH 过去执行）
+
+1. **SSH 登录**：`ssh ubuntu@124.221.158.216`，使用**本机 `id_mentor_deploy` 密钥免密登录**（与推 GitHub 的密钥不同）。
+   - 服务器账户为普通用户 `ubuntu`；`root` 默认禁止直接登录，需管理员权限时用 `sudo` 临时借用（免密 `sudo`）。
+   - 密钥认证：本机持私钥（不外泄），服务器 `~/.ssh/authorized_keys` 存本机公钥；登录时服务器发随机挑战，本机用私钥解出即完成身份确认，全程免密码。
+2. **实际部署**（`/opt/mentor-ability/` 下）：`mentor` 身份 `git pull`（带 TLS 重试）→ `npm install`（含 `server`）→ `npm run build:all`（只打包 `.vue` 成 `dist/`、`dist/admin/`）→ `root` 免密 `sudo systemctl restart mentor-ability` → `curl /api/health`。
+3. **长命令改后台跑**：当 `pull/install/build/restart` 被判定耗时较长而跳过时，改成后台脚本——
+   - 服务器写 `/tmp/do_deploy.sh`（单引号 heredoc 包裹）；
+   - `nohup bash /tmp/do_deploy.sh > /tmp/deploy.log 2>&1 &` 后台启动；
+   - 轮询 `/tmp/deploy.log` + 健康检查确认完成。
+
+### 验证上线
+
+- 服务器 `git log` 为本次提交；
+- `grep` 确认源码已含本次改动（如 2×2 栅格、无 emoji）；
+- 服务 `systemctl` 状态 `active`；
+- `curl /api/health` 返回 `ok:true`；
+- 构建产物 `dist/`（及 `dist/admin/`）含新内容。
+
+### 常见卡点
+
+1. **忘重启 / 只 build 不 restart**：`build:all` 只打包前端静态文件；后端是运行中的 Node 进程，磁盘 `.js` 改了不 `restart` 内存仍是旧代码——最隐蔽。
+2. **两个密钥混淆**：推 GitHub 用 `id_ed25519`，登服务器用 `id_mentor_deploy`；SSH 不显式 `-i` 会拿错密钥报 `Permission denied (publickey)`。
+3. **长命令被环境自动跳过**：表现为命令"没反应"，须用后台脚本 + 日志轮询绕过。
+4. **服务器 `git pull` 偶发 TLS 握手失败**：网络抖动，脚本里要加重试。
+5. **本地没先 `npm run build` 验证**：把编译不过的代码推上去，服务器 build 直接失败。
+6. **健康检查 `/api/health` 不通**：多半进程没起 / 端口被占 / 防火墙，需查 `systemctl status` 与 `deploy.log`。
+7. **凭证/网络类**：SSH 不通、服务器 IP 变动、`sudo` 免密未配好。
+
+> 一句话：**本地改 → 本地 build → commit/push → SSH 用后台脚本跑 pull/install/build/restart → 轮询日志与健康检查确认**。与上面实操手册一致，差异仅在「AI 代执行」+「长命令改后台跑」。

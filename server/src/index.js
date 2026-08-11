@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.js'
 import metaRoutes from './routes/meta.js'
 import assessmentRoutes from './routes/assessment.js'
 import adminRoutes from './routes/admin.js'
+import yuanqiRoutes from './routes/yuanqi.js'
 
 // 全局兜底：捕获未处理的异常 / Promise 拒绝，记录后退出，
 // 由 systemd 的 Restart=always 自动拉起，避免进程“静默假死”导致端口长期打不开。
@@ -37,7 +38,7 @@ function buildApiApp() {
   app.use('/api/meta', metaRoutes)
   app.use('/api/assessment', assessmentRoutes)
   app.use('/api/admin', adminRoutes)
-
+  app.use('/api/coach', yuanqiRoutes)
   app.use((err, req, res, next) => {
     console.error(err)
     res.status(500).json({ error: '服务器内部错误' })
@@ -48,8 +49,32 @@ function buildApiApp() {
 // 生产模式：托管前端构建产物（用户端 dist/user / 后台端 dist/admin）
 function attachStatic(app, dir) {
   if (SERVE_DIST && fs.existsSync(dir)) {
-    app.use(express.static(dir))
-    app.get('*', (req, res) => res.sendFile(path.join(dir, 'index.html')))
+    // 对静态资源做差异化缓存：
+    //   - HTML：no-store，避免用户磁盘缓存了引用"旧 hash chunk"的旧 html 造成 ESM 404
+    //           （chunk 名已关掉 hash、文件名稳定，配合此设置可让用户纯刷新即可生效）
+    //   - JS/CSS/其它：短缓存 1 小时（vite 输出文件名稳定，缓存安全）
+    app.use(
+      express.static(dir, {
+        setHeaders: (res, filePath) => {
+          const lower = filePath.toLowerCase()
+          if (lower.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
+            res.setHeader('Pragma', 'no-cache')
+            res.setHeader('Expires', '0')
+          } else {
+            res.setHeader('Cache-Control', 'public, max-age=3600')
+          }
+        }
+      })
+    )
+    // SPA history 兜底：仅对"无扩展名 / 不像资源文件"的路径返回 index.html，
+    // 避免将来出现 .js / .css 404 时被 index.html 顶替成 text/html 进而破坏 ESM 严格 MIME 检查。
+    app.get(/^\/(?!assets\/).*/, (req, res) => {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
+      res.setHeader('Pragma', 'no-cache')
+      res.setHeader('Expires', '0')
+      res.sendFile(path.join(dir, 'index.html'))
+    })
     console.log('[static] 托管前端构建产物:', dir)
   } else if (SERVE_DIST) {
     console.warn('[static] 未找到目录，请先运行 npm run build:', dir)

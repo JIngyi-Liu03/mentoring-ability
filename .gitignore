@@ -1,5 +1,6 @@
 node_modules/
-dist/
+# dist/  (部署时需随源码上传，临时放开；本地 git 仍不追踪)
+!dist/
 server/data/*.db
 server/data/*.db-journal
 server/data/*.db-wal
@@ -17,4 +18,16 @@ server_err.log
 build_err.txt
 build_out.txt
 .vite/
+dev_out.log
+dev_err.log
 logs/
+
+# ===== 本地调试临时产物，绝不提交 =====
+.playwright-cli/
+snap-*.yml
+$null
+server/_tmp_*.json
+server/_tmp_*.txt
+server/_tmp_*.log
+*.png
+!deploy/**/*.png
