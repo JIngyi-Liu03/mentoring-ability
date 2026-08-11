@@ -198,7 +198,7 @@ watch(() => route.params.id, loadResult)
 
     <!-- 底部操作：AI 深度解读 + 退出 -->
     <div class="actions">
-      <button class="btn btn-primary btn-ai" @click="router.push('/report/' + (route.params.id || ''))">
+      <button class="btn btn-primary btn-ai" @click="router.push('/report')">
         AI深度解读
       </button>
       <button class="btn btn-outline" @click="router.push('/intro')">退出</button>

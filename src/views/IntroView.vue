@@ -36,7 +36,7 @@ function fmtTime(s) {
   const p = (n) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
 }
-function openResult(id) { router.push('/result/' + id) }
+function openResult(id) { router.push('/result') }
 
 onMounted(async () => {
   histLoading.value = true

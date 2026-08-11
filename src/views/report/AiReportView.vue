@@ -53,7 +53,7 @@ function buildCoachContext() {
   return {
     name: u?.name || '学员',
     phone: u?.phone || '',
-    resultId: resultId || '',
+    resultId: resultId.value || '',
     overall: result.value?.overall?.toFixed?.(2) || '',
     levelShort: lv.short,
     levelName: lv.name,
@@ -178,7 +178,9 @@ async function sendChat() {
 
 const route = useRoute()
 const router = useRouter()
-const resultId = route.params.id
+// 支持固定 URL `/report`（不带 id）：自动取该用户最新一条测评；
+// 也兼容旧式 `/report/:id`（带 id 时精确取那一条）
+const resultId = ref(route.params.id || '')
 
 const result = ref(null)
 const loading = ref(false)
@@ -394,8 +396,21 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    const r = await api.get(`/assessment/${resultId}`)
-    result.value = normalize(r)
+    if (resultId.value) {
+      // 带 id：精确取那一条
+      const r = await api.get(`/assessment/${resultId.value}`)
+      result.value = normalize(r)
+    } else {
+      // 无 id：自动取该用户最新一条测评（与 ResultView 保持一致）
+      const { results } = await api.get('/assessment/history')
+      if (results && results.length > 0) {
+        resultId.value = results[0].id
+        const r = await api.get(`/assessment/${resultId.value}`)
+        result.value = normalize(r)
+      } else {
+        error.value = '暂无测评结果，请先完成测评'
+      }
+    }
   } catch (e) {
     error.value = e?.message || '加载失败'
   } finally {
@@ -404,13 +419,18 @@ async function load() {
 }
 
 onMounted(load)
+// URL 变化（如历史记录从带 id 切换到固定 URL）时重新加载
+watch(() => route.params.id, () => {
+  resultId.value = route.params.id || ''
+  load()
+})
 </script>
 
 <template>
   <div class="report" v-if="result">
     <!-- 顶栏 -->
     <header class="topbar">
-      <button class="back" @click="router.push(`/result/${resultId}`)">基础报告</button>
+      <button class="back" @click="router.push('/result')">基础报告</button>
       <span class="title">AI 深度解读</span>
       <span class="level-chip">{{ overallLevelObj.short }}</span>
     </header>
