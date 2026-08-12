@@ -52,7 +52,7 @@ export function updatePassword(id, passwordHash) {
 // 用户列表（含测评次数与最新得分，排除管理员）
 export function listWithStats(adminName) {
   return db.prepare(`
-    SELECT u.id, u.username, u.name, u.role, u.created_at,
+    SELECT u.id, u.username, u.name, u.role, u.created_at, u.ai_unlocked_at,
       (SELECT COUNT(*) FROM results r WHERE r.user_id = u.id) AS assessments,
       (SELECT overall FROM results r WHERE r.user_id = u.id ORDER BY r.created_at DESC LIMIT 1) AS latest_overall,
       (SELECT overall_level FROM results r WHERE r.user_id = u.id ORDER BY r.created_at DESC LIMIT 1) AS latest_level

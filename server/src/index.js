@@ -9,6 +9,7 @@ import metaRoutes from './routes/meta.js'
 import assessmentRoutes from './routes/assessment.js'
 import adminRoutes from './routes/admin.js'
 import yuanqiRoutes from './routes/yuanqi.js'
+import aiUnlockRoutes from './routes/ai-unlock.js'
 
 // 全局兜底：捕获未处理的异常 / Promise 拒绝，记录后退出，
 // 由 systemd 的 Restart=always 自动拉起，避免进程“静默假死”导致端口长期打不开。
@@ -39,6 +40,7 @@ function buildApiApp() {
   app.use('/api/assessment', assessmentRoutes)
   app.use('/api/admin', adminRoutes)
   app.use('/api/coach', yuanqiRoutes)
+  app.use('/api/ai-report', aiUnlockRoutes)
   app.use((err, req, res, next) => {
     console.error(err)
     res.status(500).json({ error: '服务器内部错误' })

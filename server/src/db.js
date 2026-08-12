@@ -39,6 +39,13 @@ try {
   // column already exists
 }
 
+// AI 深度解读解锁时间
+try {
+  db.prepare('ALTER TABLE users ADD COLUMN ai_unlocked_at TEXT').run()
+} catch (e) {
+  // column already exists
+}
+
 // phone 唯一索引（一个手机号一个用户）
 try {
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone ON users(phone) WHERE phone IS NOT NULL')
@@ -87,6 +94,18 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_sms_codes_phone ON sms_codes(phone);
+
+  CREATE TABLE IF NOT EXISTS ai_unlock_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    code_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    expires_at TEXT NOT NULL,
+    used_at TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_unlock_user ON ai_unlock_codes(user_id);
 `)
 
 // 首次启动：创建管理员账号

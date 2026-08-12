@@ -424,10 +424,120 @@ watch(() => route.params.id, () => {
   resultId.value = route.params.id || ''
   load()
 })
+
+// ===== AI 深度解读解锁 =====
+const unlocked = ref(false)
+const unlockChecking = ref(true)
+const unlockCode = ref('')
+const unlockErr = ref('')
+const unlockSending = ref(false)
+
+async function checkUnlock() {
+  try {
+    const { unlocked: u } = await api.get('/ai-report/access')
+    unlocked.value = u
+  } catch {
+    // 后端不可用时放行（避免用户端因网络问题被永远挡在弹窗前）
+    unlocked.value = true
+  } finally {
+    unlockChecking.value = false
+  }
+}
+
+async function submitUnlock() {
+  const code = unlockCode.value.toUpperCase().trim()
+  if (!code || unlockSending.value) return
+  unlockErr.value = ''
+  unlockSending.value = true
+  try {
+    await api.post('/ai-report/unlock', { code })
+    unlocked.value = true
+  } catch (e) {
+    unlockErr.value = e?.message || '解锁失败，请重试'
+  } finally {
+    unlockSending.value = false
+  }
+}
+
+// 自动转大写 + 自动加横线
+function onCodeInput(e) {
+  let v = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '')
+  if (v.length === 4 && !v.includes('-')) v = v + '-'
+  unlockCode.value = v.slice(0, 9)
+  unlockErr.value = ''
+}
+
+onMounted(checkUnlock)
+
+// 复制加好友文案
+async function copyUnlockText() {
+  const text = (getUser()?.phone || '') + ' 解锁AI深度解读-导师辅导能力'
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.style.position = 'fixed'; ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.select()
+    try { document.execCommand('copy') } catch {}
+    document.body.removeChild(ta)
+  }
+}
 </script>
 
 <template>
-  <div class="report" v-if="result">
+  <!-- 解锁弹窗遮罩 -->
+  <div v-if="!unlockChecking && !unlocked" class="unlock-overlay">
+    <div class="unlock-modal">
+      <div class="unlock-head">
+        <div class="unlock-head-icon">&#128274;</div>
+        <h2 class="unlock-head-title">解锁 AI 深度解读</h2>
+        <p class="unlock-head-sub">扫码添加小秘书，获取您的专属解锁码</p>
+      </div>
+      <div class="unlock-body">
+        <div class="qr-side">
+          <div class="qr-box">
+            <img src="/wechat-SQ.png" alt="小秘书微信二维码" class="qr-img" />
+          </div>
+          <div class="qr-tip"><strong>微信扫一扫</strong>添加您的专属小秘书</div>
+          <div class="qr-steps">
+            <ol>
+              <li>微信扫一扫添加小秘书为好友</li>
+              <li>小秘书会给您专属解锁码</li>
+              <li>加好友时发送下方文案</li>
+            </ol>
+          </div>
+          <div class="copy-row">
+            <span class="copy-text"><b>{{ (getUser()?.phone || '') }}</b> 解锁AI深度解读-导师辅导能力</span>
+            <button class="copy-btn" @click="copyUnlockText">复制</button>
+          </div>
+        </div>
+        <div class="form-side">
+          <h3 class="form-title">若您已有解锁码请输入：</h3>
+          <p class="form-sub">输入后即可永久解锁 AI 深度解读。</p>
+          <input
+            :value="unlockCode"
+            type="text"
+            class="code-input"
+            placeholder="XXXX-XXXX"
+            maxlength="9"
+            autocomplete="off"
+            spellcheck="false"
+            @input="onCodeInput"
+            @keydown.enter="submitUnlock"
+          />
+          <p class="form-err">{{ unlockErr || '&nbsp;' }}</p>
+          <button class="unlock-btn" @click="submitUnlock" :disabled="unlockSending">立即解锁</button>
+        </div>
+      </div>
+      <div class="unlock-foot">解锁码由 8 位字母+数字组成 · 格式 XXXX-XXXX</div>
+    </div>
+  </div>
+
+  <div v-if="unlockChecking" class="unlock-checking">加载中…</div>
+
+  <div class="report" v-if="result && unlocked">
     <!-- 顶栏 -->
     <header class="topbar">
       <button class="back" @click="router.push('/result')">基础报告</button>
@@ -746,4 +856,109 @@ watch(() => route.params.id, () => {
 .suggest li { font-size: 13px; color: #3a3f4a; line-height: 1.7; margin-bottom: 6px; }
 
 .err { color: #c07a3e; font-size: 13px; margin-top: 16px; }
+
+/* ===== 解锁弹窗 ===== */
+.unlock-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(15, 18, 24, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: unlockFadeIn 0.25s ease;
+}
+@keyframes unlockFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.unlock-modal {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%; max-width: 880px; max-height: 92vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  animation: unlockSlideUp 0.3s ease;
+}
+@keyframes unlockSlideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.unlock-modal::-webkit-scrollbar { width: 6px; }
+.unlock-modal::-webkit-scrollbar-thumb { background: #d0d4dc; border-radius: 3px; }
+
+.unlock-head {
+  background: linear-gradient(135deg, #2f6b8f 0%, #4a8aab 100%);
+  color: #fff; padding: 28px 32px 24px;
+  text-align: center; border-radius: 16px 16px 0 0;
+}
+.unlock-head-icon { font-size: 36px; margin-bottom: 8px; }
+.unlock-head-title { font-size: 20px; font-weight: 700; margin: 0 0 6px; }
+.unlock-head-sub { font-size: 13px; opacity: 0.92; line-height: 1.6; margin: 0; }
+
+.unlock-body {
+  padding: 28px 32px 32px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 28px;
+}
+@media (max-width: 720px) {
+  .unlock-body { grid-template-columns: 1fr; padding: 22px 20px 24px; gap: 22px; }
+  .unlock-head { padding: 22px 20px 18px; }
+  .unlock-head-title { font-size: 18px; }
+}
+
+.qr-side { text-align: center; }
+.qr-box {
+  display: inline-block; padding: 14px;
+  background: #fff; border: 2px solid #2f6b8f;
+  border-radius: 12px; box-shadow: 0 4px 12px rgba(47,107,143,0.12);
+}
+.qr-img { display: block; width: 200px; height: 200px; border-radius: 6px; }
+.qr-tip { margin-top: 14px; font-size: 13px; color: #5b6472; line-height: 1.7; }
+.qr-tip strong { color: #2f6b8f; font-size: 14px; display: block; margin-bottom: 4px; }
+.qr-steps {
+  margin-top: 12px; text-align: left;
+  background: #f7f9fb; padding: 12px 14px;
+  border-radius: 8px; font-size: 12px; color: #5b6472; line-height: 1.8;
+}
+.qr-steps ol { margin: 0; padding-left: 18px; }
+
+.copy-row {
+  margin-top: 10px;
+  display: flex; align-items: center; gap: 8px;
+  background: #fff7e6; border: 1px dashed #c07a3e;
+  border-radius: 8px; padding: 8px 10px;
+}
+.copy-text { flex: 1 1 auto; min-width: 0; font-size: 12px; color: #1f2430; font-weight: 600; word-break: break-all; line-height: 1.5; }
+.copy-btn {
+  flex: 0 0 auto; background: #c07a3e; color: #fff;
+  border: none; border-radius: 6px; padding: 5px 10px; font-size: 11px;
+  transition: background 0.15s ease;
+}
+.copy-btn:hover { background: #a66834; }
+
+.form-side { display: flex; flex-direction: column; justify-content: center; }
+.form-title { font-size: 15px; font-weight: 700; margin: 0 0 6px; color: #1f2430; }
+.form-sub { font-size: 12.5px; color: #5b6472; margin: 0 0 18px; line-height: 1.6; }
+.code-input {
+  width: 100%; padding: 14px 16px;
+  font-size: 18px; font-weight: 700; letter-spacing: 4px;
+  text-align: center; font-family: 'Courier New', monospace;
+  border: 2px solid #e3e7ec; border-radius: 10px; outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  text-transform: uppercase;
+}
+.code-input:focus { border-color: #2f6b8f; box-shadow: 0 0 0 3px rgba(47,107,143,0.12); }
+.code-input.err { border-color: #c07a3e; box-shadow: 0 0 0 3px rgba(192,122,62,0.12); }
+.form-err { color: #c07a3e; font-size: 12.5px; margin: 8px 0 0; min-height: 18px; }
+.unlock-btn {
+  margin-top: 16px; width: 100%;
+  padding: 13px 20px; font-size: 15px; font-weight: 600;
+  background: #2f6b8f; color: #fff;
+  border: none; border-radius: 10px; transition: background 0.15s ease;
+}
+.unlock-btn:hover:not(:disabled) { background: #265a78; }
+.unlock-btn:disabled { background: #b7c4cd; }
+
+.unlock-foot {
+  background: #fafbfc; border-top: 1px solid #eceef2;
+  padding: 16px 32px; font-size: 12px; color: #8b9099;
+  text-align: center; line-height: 1.7;
+  border-radius: 0 0 16px 16px;
+}
+@media (max-width: 720px) { .unlock-foot { padding: 14px 20px; } }
+
+.unlock-checking { display: flex; align-items: center; justify-content: center; min-height: 100vh; color: #5b6472; font-size: 14px; }
 </style>
