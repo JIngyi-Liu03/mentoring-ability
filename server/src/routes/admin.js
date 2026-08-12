@@ -97,8 +97,8 @@ router.post('/generate-unlock-code', requireAdmin, (req, res) => {
   const expiresAt = new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 19)
 
   db.prepare(`
-    INSERT INTO ai_unlock_codes (user_id, code_hash, expires_at) VALUES (?, ?, ?)
-  `).run(user.id, codeHash, expiresAt)
+    INSERT INTO ai_unlock_codes (user_id, code_hash, code, expires_at) VALUES (?, ?, ?, ?)
+  `).run(user.id, codeHash, code, expiresAt)
 
   res.json({
     code,
@@ -112,7 +112,7 @@ router.post('/generate-unlock-code', requireAdmin, (req, res) => {
 // 解锁码历史
 router.get('/unlock-codes', requireAdmin, (req, res) => {
   const rows = db.prepare(`
-    SELECT c.id, c.user_id, c.created_at, c.expires_at, c.used_at,
+    SELECT c.id, c.user_id, c.code_hash, c.created_at, c.expires_at, c.used_at,
            u.username, u.name, u.phone
     FROM ai_unlock_codes c
     JOIN users u ON u.id = c.user_id
@@ -120,17 +120,23 @@ router.get('/unlock-codes', requireAdmin, (req, res) => {
     LIMIT 200
   `).all()
 
-  const list = rows.map(r => ({
-    id: r.id,
-    userId: r.user_id,
-    username: r.username,
-    name: r.name || '—',
-    phone: r.phone ? r.phone.slice(0, 3) + '****' + r.phone.slice(-4) : '—',
-    createdAt: r.created_at,
-    expiresAt: r.expires_at,
-    usedAt: r.used_at || null,
-    status: r.used_at ? 'used' : (r.expires_at < new Date().toISOString() ? 'expired' : 'active')
-  }))
+  const now = new Date()
+  const list = rows.map(r => {
+    const used = !!r.used_at
+    const expired = !used && (Date.parse(r.expires_at.replace(' ', 'T') + 'Z') < now.getTime())
+    return {
+      id: r.id,
+      userId: r.user_id,
+      username: r.username,
+      name: r.name || '—',
+      phone: r.phone ? r.phone.slice(0, 3) + '****' + r.phone.slice(-4) : '—',
+      code: r.code || null,
+      createdAt: r.created_at,
+      expiresAt: r.expires_at,
+      usedAt: r.used_at || null,
+      status: used ? 'used' : (expired ? 'expired' : 'active')
+    }
+  })
 
   res.json({ codes: list })
 })

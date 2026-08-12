@@ -46,6 +46,13 @@ try {
   // column already exists
 }
 
+// 解锁码明文（仅给管理员看，方便复制；用户端验证用 hash 列）
+try {
+  db.prepare('ALTER TABLE ai_unlock_codes ADD COLUMN code TEXT').run()
+} catch (e) {
+  // column already exists
+}
+
 // phone 唯一索引（一个手机号一个用户）
 try {
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone ON users(phone) WHERE phone IS NOT NULL')
@@ -99,6 +106,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     code_hash TEXT NOT NULL,
+    code TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     expires_at TEXT NOT NULL,
     used_at TEXT,
