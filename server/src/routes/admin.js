@@ -112,7 +112,7 @@ router.post('/generate-unlock-code', requireAdmin, (req, res) => {
 // 解锁码历史
 router.get('/unlock-codes', requireAdmin, (req, res) => {
   const rows = db.prepare(`
-    SELECT c.id, c.user_id, c.code_hash, c.created_at, c.expires_at, c.used_at,
+    SELECT c.id, c.user_id, c.code_hash, c.code, c.created_at, c.expires_at, c.used_at,
            u.username, u.name, u.phone
     FROM ai_unlock_codes c
     JOIN users u ON u.id = c.user_id
