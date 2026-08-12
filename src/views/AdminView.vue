@@ -147,7 +147,7 @@ function levelName(l) {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>用户名</th><th>姓名</th><th>角色</th><th>测评次数</th><th>最新得分</th><th>等级</th><th>AI 解锁状态</th></tr>
+            <tr><th>手机号</th><th>姓名</th><th>角色</th><th>测评次数</th><th>最新得分</th><th>等级</th><th>AI 解锁状态</th></tr>
           </thead>
           <tbody>
             <tr v-for="u in users" :key="u.id">
@@ -170,7 +170,7 @@ function levelName(l) {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>用户</th><th>姓名</th><th>综合得分</th><th>等级</th><th>时间</th></tr>
+            <tr><th>手机号</th><th>姓名</th><th>综合得分</th><th>等级</th><th>时间</th></tr>
           </thead>
           <tbody>
             <tr v-for="r in results" :key="r.id">
