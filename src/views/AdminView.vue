@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { api } from '../api/client.js'
 import RadarChart from '../components/RadarChart.vue'
 
@@ -15,6 +15,17 @@ const genPhone = ref('')
 const genResult = ref(null)
 const genError = ref('')
 const genLoading = ref(false)
+
+// 定时刷新解锁码历史（每 10 秒），让管理员能看到用户解锁后的状态更新
+let unlockTimer = null
+async function refreshUnlockCodes() {
+  try {
+    const uc = await api.get('/admin/unlock-codes')
+    unlockCodes.value = uc.codes || []
+  } catch { /* 静默忽略 */ }
+}
+onMounted(() => { unlockTimer = setInterval(refreshUnlockCodes, 10000) })
+onUnmounted(() => { clearInterval(unlockTimer) })
 
 onMounted(async () => {
   try {
