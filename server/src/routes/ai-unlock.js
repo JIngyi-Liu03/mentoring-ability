@@ -29,7 +29,7 @@ function sha256(text) {
 
 // GET /api/ai-report/access — 查询当前用户是否已解锁
 router.get('/access', requireAuth, (req, res) => {
-  const user = db.prepare('SELECT ai_unlocked_at FROM users WHERE id = ?').get(req.userId)
+  const user = db.prepare('SELECT ai_unlocked_at FROM users WHERE id = ?').get(req.user.id)
   const unlocked = !!(user && user.ai_unlocked_at)
   res.json({ unlocked })
 })
@@ -49,7 +49,7 @@ router.post('/unlock', requireAuth, (req, res) => {
     SELECT id, expires_at FROM ai_unlock_codes
     WHERE user_id = ? AND code_hash = ? AND used_at IS NULL AND expires_at > datetime('now')
     ORDER BY created_at DESC LIMIT 1
-  `).get(req.userId, codeHash)
+  `).get(req.user.id, codeHash)
 
   if (!row) {
     return res.status(400).json({ error: '解锁码无效或已过期' })
@@ -58,7 +58,7 @@ router.post('/unlock', requireAuth, (req, res) => {
   // 标记码已使用
   db.prepare('UPDATE ai_unlock_codes SET used_at = datetime(\'now\') WHERE id = ?').run(row.id)
   // 标记用户已解锁
-  db.prepare('UPDATE users SET ai_unlocked_at = datetime(\'now\') WHERE id = ?').run(req.userId)
+  db.prepare('UPDATE users SET ai_unlocked_at = datetime(\'now\') WHERE id = ?').run(req.user.id)
 
   res.json({ unlocked: true })
 })
