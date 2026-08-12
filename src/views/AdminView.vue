@@ -231,7 +231,7 @@ function levelName(l) {
           </thead>
           <tbody>
             <tr v-for="c in unlockCodes" :key="c.id">
-              <td>{{ c.username }}</td>
+              <td>{{ c.name }}</td>
               <td>{{ c.phone }}</td>
               <td class="code-cell">{{ c.code || '—' }}</td>
               <td :class="unlockStatusClass2(c)">{{ unlockStatusLabel2(c) }}</td>
