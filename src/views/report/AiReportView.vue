@@ -498,7 +498,7 @@ async function copyUnlockText() {
       <div class="unlock-body">
         <div class="qr-side">
           <div class="qr-box">
-            <img src="/wechat-SQ.png" alt="小秘书微信二维码" class="qr-img" />
+            <img :src="'/wechat-SQ.png'" alt="小秘书微信二维码" class="qr-img" />
           </div>
           <div class="qr-tip"><strong>微信扫一扫</strong>添加您的专属小秘书</div>
           <div class="qr-steps">
