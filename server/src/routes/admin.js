@@ -129,7 +129,7 @@ router.get('/unlock-codes', requireAdmin, (req, res) => {
       userId: r.user_id,
       username: r.username,
       name: r.name || '—',
-      phone: r.phone ? r.phone.slice(0, 3) + '****' + r.phone.slice(-4) : '—',
+      phone: r.phone || '—',
       code: r.code || null,
       createdAt: r.created_at,
       expiresAt: r.expires_at,

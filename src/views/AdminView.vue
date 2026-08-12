@@ -87,16 +87,6 @@ function unlockStatusLabel(u) {
 function unlockStatusClass(u) {
   return u.ai_unlocked_at ? 'badge-unlocked' : 'badge-locked'
 }
-function unlockStatusLabel2(r) {
-  if (r.used_at) return '已使用'
-  if (new Date(r.expires_at) < new Date()) return '已过期'
-  return '待使用'
-}
-function unlockStatusClass2(r) {
-  if (r.used_at) return 'status-used'
-  if (new Date(r.expires_at) < new Date()) return 'status-expired'
-  return 'status-active'
-}
 
 function indicators() {
   return (overview.value?.dimensionAverages || []).map(d => ({ name: d.name, max: 5 }))
@@ -227,19 +217,18 @@ function levelName(l) {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>用户</th><th>手机号</th><th>解锁码</th><th>状态</th><th>生成时间</th><th>使用时间</th></tr>
+            <tr><th>姓名</th><th>手机号</th><th>解锁码</th><th>生成时间</th><th>使用时间</th></tr>
           </thead>
           <tbody>
             <tr v-for="c in unlockCodes" :key="c.id">
               <td>{{ c.name }}</td>
               <td>{{ c.phone }}</td>
               <td class="code-cell">{{ c.code || '—' }}</td>
-              <td :class="unlockStatusClass2(c)">{{ unlockStatusLabel2(c) }}</td>
               <td class="muted">{{ c.createdAt }}</td>
               <td class="muted">{{ c.usedAt || '—' }}</td>
             </tr>
             <tr v-if="!unlockCodes.length">
-              <td colspan="6" class="muted" style="text-align:center">暂无记录</td>
+              <td colspan="5" class="muted" style="text-align:center">暂无记录</td>
             </tr>
           </tbody>
         </table>
